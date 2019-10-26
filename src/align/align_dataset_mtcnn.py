@@ -152,9 +152,9 @@ def parse_arguments(argv):
     parser = argparse.ArgumentParser()
 
     parser.add_argument('--input_dir', type=str, help='Directory with unaligned images.',
-                        default='/Users/pawan/workspace/ml-facenet-jetson/src/lfw')
+                        default='~/ml-facenet-jetson/src/lfw')
     parser.add_argument('--output_dir', type=str, help='Directory with aligned face thumbnails.',
-                        default='/Users/pawan/workspace/ml-facenet-jetson/src/lfw_aligned')
+                        default='~/ml-facenet-jetson/src/lfw_aligned')
     parser.add_argument('--image_size', type=int,
                         help='Image size (height, width) in pixels.', default=160)
     parser.add_argument('--margin', type=int,
