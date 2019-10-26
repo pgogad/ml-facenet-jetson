@@ -144,6 +144,10 @@ def main(args):
     print('Number of successfully aligned images: %d' % nrof_successfully_aligned)
 
 
+BASE_PATH = os.path.dirname(__file__)
+print('Base name : %s' % BASE_PATH)
+
+
 def parse_arguments(argv):
     parser = argparse.ArgumentParser()
 
