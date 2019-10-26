@@ -1,2 +1,4 @@
 *.iml
 .idea/
+src/lfw_aligned/
+*.pyc
