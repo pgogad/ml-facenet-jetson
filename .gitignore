@@ -2,3 +2,8 @@
 .idea/
 src/lfw_aligned/
 *.pyc
+
+src/.DS_Store
+.DS_Store
+
+src/20180402-114759/
