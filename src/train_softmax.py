@@ -365,7 +365,8 @@ def train(args, sess, epoch, image_list, label_list, index_dequeue_op, enqueue_o
         stat['learning_rate'][epoch - 1] = lr_
         stat['accuracy'][step_ - 1] = accuracy_
         stat['prelogits_hist'][epoch - 1, :] += \
-        np.histogram(np.minimum(np.abs(prelogits_), prelogits_hist_max), bins=1000, range=(0.0, prelogits_hist_max))[0]
+            np.histogram(np.minimum(np.abs(prelogits_), prelogits_hist_max), bins=1000,
+                         range=(0.0, prelogits_hist_max))[0]
 
         duration = time.time() - start_time
         print(
