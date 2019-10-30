@@ -41,8 +41,8 @@ import align.detect_face
 import facenet
 
 gpu_memory_fraction = 0.3
-facenet_model_checkpoint = os.path.dirname(__file__) + "/../model_checkpoints/20170512-110547"
-classifier_model = os.path.dirname(__file__) + "/../model_checkpoints/my_classifier_1.pkl"
+facenet_model_checkpoint = '/home/pawan/20180408-102900'
+classifier_model = '/home/pawan/20180408-102900/my_classifier.plk'
 debug = False
 
 
