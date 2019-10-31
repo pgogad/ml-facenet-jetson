@@ -27,7 +27,7 @@ def show_faces(img, boxes, landmarks):
     for bb, ll in zip(boxes, landmarks):
         x1, y1, x2, y2 = int(bb[0]), int(bb[1]), int(bb[2]), int(bb[3])
         croped_img = img[y1:y2, x1:x2]
-        embedding, name = recognizer.identifier(croped_img)
+        embedding, name = recognizer.identify(croped_img)
         print("Found %s", name)
         cv2.rectangle(img, (x1, y1), (x2, y2), BBOX_COLOR, 2)
 

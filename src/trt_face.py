@@ -30,19 +30,16 @@
 # SOFTWARE.
 
 import pickle
-import os
 
-import cv2
 import numpy as np
 import tensorflow as tf
-from scipy import misc
 
-import align.detect_face
 import facenet
 
 gpu_memory_fraction = 0.3
-facenet_model_checkpoint = '/home/pawan/20180408-102900'
-classifier_model = '/home/pawan/20180408-102900/my_classifier.plk'
+# facenet_model_checkpoint = '/home/pawan/20180408-102900'
+facenet_model_checkpoint = '/home/pawan/20180408-102900/frozen_graph.pb'
+classifier_model = '/home/pawan/20180408-102900/my_classifier.pkl'
 debug = False
 
 
