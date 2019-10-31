@@ -17,8 +17,8 @@ gpu_memory_fraction = 0.3
 # facenet_model_checkpoint = os.path.join(BASE_DIR, '20180402-114759/my_frozen.pb')
 # classifier_model = os.path.join(BASE_DIR, '20180402-114759', 'my_classifier.pkl')
 # facenet_model_checkpoint = '/home/pawan/20180408-102900'
-facenet_model_checkpoint = '/home/pawan/20180408-102900/frozen_graph.pb'
-classifier_model = '/home/pawan/20180408-102900/my_classifier.pkl'
+# facenet_model_checkpoint = '/home/pawan/20180408-102900/frozen_graph.pb'
+# classifier_model = '/home/pawan/20180408-102900/my_classifier.pkl'
 debug = False
 
 
@@ -37,15 +37,6 @@ class Recognition:
         self.encoder = Encoder(device=device)
         self.identifier = Identifier(device=device)
 
-    # def add_identity(self, image, person_name):
-    #     faces = self.detect.find_faces(image)
-
-    # if len(faces) == 1:
-    #     face = faces[0]
-    #     face.name = person_name
-    #     face.embedding = self.encoder.generate_embedding(face)
-    #     return faces
-
     def identify(self, image, device='mac'):
         faces = self.detect.find_faces(image, device)
         print("Found %s faces" % str(len(faces)))
@@ -55,7 +46,6 @@ class Recognition:
             name = self.identifier.identify(embedding)
             print("Found %s" % name)
             face.name = name
-            # return embedding, name
 
 
 class Identifier:

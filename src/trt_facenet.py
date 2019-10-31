@@ -2,15 +2,13 @@ import argparse
 import sys
 
 import cv2
-import trt_face
 
+import trt_face
 from utils.camera import add_camera_args, Camera
 from utils.display import open_window, set_display
 
-# from utils.mtcnn import TrtMtcnn
-
 WINDOW_NAME = 'TestWindow'
-BBOX_COLOR = (0, 255, 0)  # green
+BBOX_COLOR = (0, 255, 0)
 
 
 def parse_args():
@@ -18,7 +16,7 @@ def parse_args():
     parser = argparse.ArgumentParser(description=desc)
     parser = add_camera_args(parser)
     parser.add_argument('--minsize', type=int, default=40, help='minsize (in pixels) for detection [40]')
-    parser.add_argument('--device', type=str, default='mac')
+    parser.add_argument('--device', type=str, default='mac', help='mac or jetson')
     args = parser.parse_args()
     return args
 
