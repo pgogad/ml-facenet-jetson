@@ -14,11 +14,6 @@ from utils.mtcnn import TrtMtcnn
 BASE_DIR = os.path.dirname(__file__)
 
 gpu_memory_fraction = 0.3
-# facenet_model_checkpoint = os.path.join(BASE_DIR, '20180402-114759/my_frozen.pb')
-# classifier_model = os.path.join(BASE_DIR, '20180402-114759', 'my_classifier.pkl')
-# facenet_model_checkpoint = '/home/pawan/20180408-102900'
-# facenet_model_checkpoint = '/home/pawan/20180408-102900/frozen_graph.pb'
-# classifier_model = '/home/pawan/20180408-102900/my_classifier.pkl'
 debug = False
 
 
