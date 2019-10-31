@@ -90,37 +90,35 @@ class Detection:
     factor = 0.709  # scale factor
 
     def __init__(self, face_crop_size=160, face_crop_margin=32, device='mac'):
-        # if device == 'mac':
-        self.pnet, self.rnet, self.onet = self._setup_mtcnn()
-        self.face_crop_size = face_crop_size
-        self.face_crop_margin = face_crop_margin
-
-    # else:
-    #     self.mtcnn = self._setup_mtcnn(device)
+        if device == 'mac':
+            self.pnet, self.rnet, self.onet = self._setup_mtcnn()
+            self.face_crop_size = face_crop_size
+            self.face_crop_margin = face_crop_margin
+        else:
+            self.mtcnn = self._setup_mtcnn(device)
 
     def _setup_mtcnn(self, device='mac'):
-        # if device == 'mac':
-        with tf.Graph().as_default():
-            gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=gpu_memory_fraction)
-            sess = tf.Session(config=tf.ConfigProto(gpu_options=gpu_options, log_device_placement=False))
-            with sess.as_default():
-                return detect_face.create_mtcnn(sess, None)
-
-    # else:
-    #     return TrtMtcnn()
+        if device == 'mac':
+            with tf.Graph().as_default():
+                gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=gpu_memory_fraction)
+                sess = tf.Session(config=tf.ConfigProto(gpu_options=gpu_options, log_device_placement=False))
+                with sess.as_default():
+                    return detect_face.create_mtcnn(sess, None)
+        else:
+            return TrtMtcnn()
 
     def find_faces(self, image, device='mac'):
         faces = []
-        bounding_boxes, _ = detect_face.detect_face(image, self.minsize,
-                                                    self.pnet, self.rnet, self.onet,
-                                                    self.threshold, self.factor)
+        # bounding_boxes, _ = detect_face.detect_face(image, self.minsize,
+        #                                             self.pnet, self.rnet, self.onet,
+        #                                             self.threshold, self.factor)
 
-        # if device == 'mac':
-        #     bounding_boxes, _ = detect_face.detect_face(image, self.minsize,
-        #                                                 self.pnet, self.rnet, self.onet,
-        #                                                 self.threshold, self.factor)
-        # else:
-        #     bounding_boxes, landmarks = self.mtcnn.detect(minsize=self.minsize)
+        if device == 'mac':
+            bounding_boxes, _ = detect_face.detect_face(image, self.minsize,
+                                                        self.pnet, self.rnet, self.onet,
+                                                        self.threshold, self.factor)
+        else:
+            bounding_boxes, landmarks = self.mtcnn.detect(minsize=self.minsize)
 
         for bb in bounding_boxes:
             face = Face()
