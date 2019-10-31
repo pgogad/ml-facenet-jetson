@@ -31,6 +31,8 @@ def show_faces(img, boxes, landmarks):
     """Draw bounding boxes and face landmarks on image."""
     for bb, ll in zip(boxes, landmarks):
         x1, y1, x2, y2 = int(bb[0]), int(bb[1]), int(bb[2]), int(bb[3])
+        crop_image = img[y1:y2, x1:x2]
+        crop_image.save('/home/pawan/crop.png')
         cv2.rectangle(img, (x1, y1), (x2, y2), BBOX_COLOR, 2)
         for j in range(5):
             cv2.circle(img, (int(ll[j]), int(ll[j + 5])), 2, BBOX_COLOR, 2)
