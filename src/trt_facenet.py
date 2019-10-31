@@ -1,5 +1,6 @@
 import argparse
 import sys
+import time
 
 import cv2
 
@@ -27,13 +28,27 @@ def show_faces(img, recognizer, device='mac'):
 
 def detect_faces(cam, recognization, minsize=40, device='mac'):
     full_scrn = False
+    frame_interval = 5  # Number of frames after which to run face detection
+    fps_display_interval = 5  # seconds
+    frame_rate = 0
+    frame_count = 0
+    start_time = time.localtime().tm_sec
 
     while True:
         if cv2.getWindowProperty(WINDOW_NAME, 0) < 0:
             break
         img = cam.read()
         if img is not None:
-            show_faces(img, recognization, device)
+            if (frame_count % frame_interval) == 0:
+                show_faces(img, recognization, device)
+                # Check our current fps
+                end_time = time.localtime().tm_sec
+                if (end_time - start_time) > fps_display_interval:
+                    frame_rate = int(frame_count / (end_time - start_time))
+                    print("FPS %s" % int(frame_rate))
+                    start_time = time.time()
+            else:
+                frame_count += 1
             cv2.imshow(WINDOW_NAME, img)
 
         key = cv2.waitKey(1)
