@@ -436,9 +436,9 @@ class TrtMtcnn(object):
     """TrtMtcnn"""
 
     def __init__(self):
-        self.pnet = TrtPNet('src/mtcnn/det1.engine')
-        self.rnet = TrtRNet('src/mtcnn/det2.engine')
-        self.onet = TrtONet('src/mtcnn/det3.engine')
+        self.pnet = TrtPNet('mtcnn/det1.engine')
+        self.rnet = TrtRNet('mtcnn/det2.engine')
+        self.onet = TrtONet('mtcnn/det3.engine')
 
     def __del__(self):
         self.onet.destroy()
