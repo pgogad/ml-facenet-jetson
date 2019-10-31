@@ -23,13 +23,14 @@ def parse_args():
     return args
 
 
-def show_faces(img, boxes, landmarks):
-    for bb, ll in zip(boxes, landmarks):
-        x1, y1, x2, y2 = int(bb[0]), int(bb[1]), int(bb[2]), int(bb[3])
-        croped_img = img[y1:y2, x1:x2]
-        embedding, name = recognizer.identify(croped_img)
-        print("Found %s", name)
-        cv2.rectangle(img, (x1, y1), (x2, y2), BBOX_COLOR, 2)
+def show_faces(img):
+    recognizer.identify(img)
+    # for bb, ll in zip(boxes, landmarks):
+    #     x1, y1, x2, y2 = int(bb[0]), int(bb[1]), int(bb[2]), int(bb[3])
+    #     croped_img = img[y1:y2, x1:x2]
+    #     embedding, name = recognizer.identify(croped_img)
+    #     print("Found %s", name)
+    #     cv2.rectangle(img, (x1, y1), (x2, y2), BBOX_COLOR, 2)
 
 
 def detect_faces(cam, mtcnn, minsize=40):
@@ -42,9 +43,9 @@ def detect_faces(cam, mtcnn, minsize=40):
             break
         img = cam.read()
         if img is not None:
-            dets, landmarks = mtcnn.detect(img, minsize=minsize)
-            print('{} face(s) found'.format(len(dets)))
-            show_faces(img, dets, landmarks)
+            # dets, landmarks = mtcnn.detect(img, minsize=minsize)
+            # print('{} face(s) found'.format(len(dets)))
+            show_faces(img)
             cv2.imshow(WINDOW_NAME, img)
 
         key = cv2.waitKey(1)

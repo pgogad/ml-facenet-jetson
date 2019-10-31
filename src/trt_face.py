@@ -33,8 +33,10 @@ import pickle
 
 import numpy as np
 import tensorflow as tf
+from scipy import misc
 
 import facenet
+from utils.mtcnn import TrtMtcnn
 
 gpu_memory_fraction = 0.3
 facenet_model_checkpoint = '/home/pawan/20180408-102900'
@@ -54,7 +56,7 @@ class Face:
 
 class Recognition:
     def __init__(self):
-        # self.detect = Detection()
+        self.detect = Detection()
         self.encoder = Encoder()
         self.identifier = Identifier()
 
@@ -68,11 +70,14 @@ class Recognition:
     #     return faces
 
     def identify(self, image):
-        # faces = self.detect.find_faces(image)
-        embedding = self.encoder.generate_embedding(image)
-        print("Embeddings generated")
-        name = self.identifier.identify(embedding)
-        return embedding, name
+        faces = self.detect.find_faces(image)
+        print("Found %s faces", str(len(faces)))
+        for face in faces:
+            embedding = self.encoder.generate_embedding(face)
+            print("Embeddings generated")
+            name = self.identifier.identify(embedding)
+            face.name = name
+            # return embedding, name
 
 
 class Identifier:
@@ -105,44 +110,42 @@ class Encoder:
         feed_dict = {images_placeholder: [prewhiten_face], phase_train_placeholder: False}
         return self.sess.run(embeddings, feed_dict=feed_dict)[0]
 
-#
-# class Detection:
-#     # face detection parameters
-#     minsize = 20  # minimum size of face
-#     threshold = [0.6, 0.7, 0.7]  # three steps's threshold
-#     factor = 0.709  # scale factor
-#
-#     def __init__(self, face_crop_size=160, face_crop_margin=32):
-#         self.pnet, self.rnet, self.onet = self._setup_mtcnn()
-#         self.face_crop_size = face_crop_size
-#         self.face_crop_margin = face_crop_margin
-#
-#     def _setup_mtcnn(self):
-#         with tf.Graph().as_default():
-#             gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=gpu_memory_fraction)
-#             sess = tf.Session(config=tf.ConfigProto(gpu_options=gpu_options, log_device_placement=False))
-#             with sess.as_default():
-#                 return align.detect_face.create_mtcnn(sess, None)
-#
-#     def find_faces(self, image):
-#         faces = []
-#
-#         bounding_boxes, _ = align.detect_face.detect_face(image, self.minsize,
-#                                                           self.pnet, self.rnet, self.onet,
-#                                                           self.threshold, self.factor)
-#         for bb in bounding_boxes:
-#             face = Face()
-#             face.container_image = image
-#             face.bounding_box = np.zeros(4, dtype=np.int32)
-#
-#             img_size = np.asarray(image.shape)[0:2]
-#             face.bounding_box[0] = np.maximum(bb[0] - self.face_crop_margin / 2, 0)
-#             face.bounding_box[1] = np.maximum(bb[1] - self.face_crop_margin / 2, 0)
-#             face.bounding_box[2] = np.minimum(bb[2] + self.face_crop_margin / 2, img_size[1])
-#             face.bounding_box[3] = np.minimum(bb[3] + self.face_crop_margin / 2, img_size[0])
-#             cropped = image[face.bounding_box[1]:face.bounding_box[3], face.bounding_box[0]:face.bounding_box[2], :]
-#             face.image = misc.imresize(cropped, (self.face_crop_size, self.face_crop_size), interp='bilinear')
-#
-#             faces.append(face)
-#
-#         return faces
+
+class Detection:
+    # face detection parameters
+    minsize = 20  # minimum size of face
+    threshold = [0.6, 0.7, 0.7]  # three steps's threshold
+    factor = 0.709  # scale factor
+    face_crop_margin = 32
+    face_crop_size = 160
+
+    def __init__(self, face_crop_size=160, face_crop_margin=32):
+        self.mtcnn = TrtMtcnn()
+
+    # def _setup_mtcnn(self):
+    #     with tf.Graph().as_default():
+    #         gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=gpu_memory_fraction)
+    #         sess = tf.Session(config=tf.ConfigProto(gpu_options=gpu_options, log_device_placement=False))
+    #         with sess.as_default():
+    #             return align.detect_face.create_mtcnn(sess, None)
+
+    def find_faces(self, image):
+        faces = []
+
+        dets, landmarks = self.mtcnn.detect(image, minsize=self.minsize)
+        for bb, ll in zip(dets, landmarks):
+            face = Face()
+            face.container_image = image
+            face.bounding_box = np.zeros(4, dtype=np.int32)
+
+            img_size = np.asarray(image.shape)[0:2]
+            face.bounding_box[0] = np.maximum(bb[0] - self.face_crop_margin / 2, 0)
+            face.bounding_box[1] = np.maximum(bb[1] - self.face_crop_margin / 2, 0)
+            face.bounding_box[2] = np.minimum(bb[2] + self.face_crop_margin / 2, img_size[1])
+            face.bounding_box[3] = np.minimum(bb[3] + self.face_crop_margin / 2, img_size[0])
+            cropped = image[face.bounding_box[1]:face.bounding_box[3], face.bounding_box[0]:face.bounding_box[2], :]
+            face.image = misc.imresize(cropped, (self.face_crop_size, self.face_crop_size), interp='bilinear')
+
+            faces.append(face)
+
+        return faces
