@@ -34,8 +34,8 @@ class Face:
 class Recognition:
     def __init__(self, device='mac'):
         self.detect = Detection(device=device)
-        self.encoder = Encoder()
-        self.identifier = Identifier()
+        self.encoder = Encoder(device=device)
+        self.identifier = Identifier(device=device)
 
     # def add_identity(self, image, person_name):
     #     faces = self.detect.find_faces(image)
@@ -59,7 +59,12 @@ class Recognition:
 
 
 class Identifier:
-    def __init__(self):
+    def __init__(self, device='mac'):
+        if device == 'mac':
+            classifier_model = os.path.join(BASE_DIR, '20180402-114759', 'my_classifier.pkl')
+        else:
+            classifier_model = '/home/pawan/20180408-102900/my_classifier.pkl'
+
         with open(classifier_model, 'rb') as infile:
             self.model, self.class_names = pickle.load(infile)
 
@@ -72,7 +77,12 @@ class Identifier:
 
 
 class Encoder:
-    def __init__(self):
+    def __init__(self, device='mac'):
+        if device == 'mac':
+            facenet_model_checkpoint = os.path.join(BASE_DIR, '20180402-114759/my_frozen.pb')
+        else:
+            facenet_model_checkpoint = '/home/pawan/20180408-102900/frozen_graph.pb'
+
         self.sess = tf.Session()
         with self.sess.as_default():
             facenet.load_model(facenet_model_checkpoint)
