@@ -14,10 +14,10 @@ from utils.mtcnn import TrtMtcnn
 BASE_DIR = os.path.dirname(__file__)
 
 gpu_memory_fraction = 0.3
-# facenet_model_checkpoint = os.path.join(BASE_DIR, '20180402-114759')
+# facenet_model_checkpoint = os.path.join(BASE_DIR, '20180402-114759/my_frozen.pb')
 # classifier_model = os.path.join(BASE_DIR, '20180402-114759', 'my_classifier.pkl')
-facenet_model_checkpoint = '/home/pawan/20180408-102900'
-# facenet_model_checkpoint = '/home/pawan/20180408-102900/frozen_graph.pb'
+# facenet_model_checkpoint = '/home/pawan/20180408-102900'
+facenet_model_checkpoint = '/home/pawan/20180408-102900/frozen_graph.pb'
 classifier_model = '/home/pawan/20180408-102900/my_classifier.pkl'
 debug = False
 
@@ -46,8 +46,8 @@ class Recognition:
     #     face.embedding = self.encoder.generate_embedding(face)
     #     return faces
 
-    def identify(self, image, device):
-        faces = self.detect.find_faces(image)
+    def identify(self, image, device='mac'):
+        faces = self.detect.find_faces(image, device)
         print("Found %s faces" % str(len(faces)))
         for face in faces:
             embedding = self.encoder.generate_embedding(face.image)
@@ -95,16 +95,15 @@ class Detection:
     threshold = [0.6, 0.7, 0.7]  # three steps's threshold
     factor = 0.709  # scale factor
 
-    # face_crop_margin = 32
-    # face_crop_size = 160
-
     def __init__(self, face_crop_size=160, face_crop_margin=32, device='mac'):
-        self.pnet, self.rnet, self.onet = self._setup_mtcnn()
-        self.face_crop_size = face_crop_size
-        self.face_crop_margin = face_crop_margin
+        if device == 'mac':
+            self.pnet, self.rnet, self.onet = self._setup_mtcnn()
+            self.face_crop_size = face_crop_size
+            self.face_crop_margin = face_crop_margin
+        else:
+            self.mtcnn = self._setup_mtcnn(device)
 
     def _setup_mtcnn(self, device='mac'):
-
         if device == 'mac':
             with tf.Graph().as_default():
                 gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=gpu_memory_fraction)
@@ -112,9 +111,9 @@ class Detection:
                 with sess.as_default():
                     return detect_face.create_mtcnn(sess, None)
         else:
-            self.mtcnn = TrtMtcnn()
+            return TrtMtcnn()
 
-    def find_faces(self, image, device):
+    def find_faces(self, image, device='mac'):
         faces = []
 
         if device == 'mac':
@@ -136,9 +135,7 @@ class Detection:
             face.bounding_box[3] = np.minimum(bb[3] + self.face_crop_margin / 2, img_size[0])
             cropped = image[face.bounding_box[1]:face.bounding_box[3], face.bounding_box[0]:face.bounding_box[2], :]
             face.image = misc.imresize(cropped, (self.face_crop_size, self.face_crop_size), interp='bilinear')
-
             faces.append(face)
-
         return faces
 
     # def __init__(self, face_crop_size=160, face_crop_margin=32):

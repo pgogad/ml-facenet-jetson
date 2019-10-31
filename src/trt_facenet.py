@@ -20,7 +20,7 @@ def parse_args():
     parser = argparse.ArgumentParser(description=desc)
     parser = add_camera_args(parser)
     parser.add_argument('--minsize', type=int, default=40, help='minsize (in pixels) for detection [40]')
-    parser.add_argument('--device', type=int, default='mac', help='minsize (in pixels) for detection [40]')
+    parser.add_argument('--device', type=str, default='mac', help='minsize (in pixels) for detection [40]')
     args = parser.parse_args()
     return args
 
@@ -47,7 +47,7 @@ def detect_faces(cam, minsize=40, device='mac'):
         if img is not None:
             # dets, landmarks = mtcnn.detect(img, minsize=minsize)
             # print('{} face(s) found'.format(len(dets)))
-            show_faces(img)
+            show_faces(img, device)
             cv2.imshow(WINDOW_NAME, img)
 
         key = cv2.waitKey(1)
@@ -69,7 +69,7 @@ def main():
     # mtcnn = TrtMtcnn()
     cam.start()
     open_window(WINDOW_NAME, width=640, height=480, title='MTCNN Window')
-    detect_faces(cam)
+    detect_faces(cam, args.device)
 
     cam.stop()
     cam.release()

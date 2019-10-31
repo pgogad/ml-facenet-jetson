@@ -93,13 +93,19 @@ def freeze_graph_def(sess, input_graph_def, output_node_names):
     return output_graph_def
 
 
+BASE_DIR = os.path.dirname(__file__)
+facenet_model_checkpoint = os.path.join(BASE_DIR, '20180402-114759')
+frozen_model = os.path.join(BASE_DIR, '20180402-114759', 'my_frozen.pb')
+
+
 def parse_arguments(argv):
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('model_dir', type=str,
-                        help='Directory containing the metagraph (.meta) file and the checkpoint (ckpt) file containing model parameters')
-    parser.add_argument('output_file', type=str,
-                        help='Filename for the exported graphdef protobuf (.pb)')
+    parser.add_argument('--model_dir', type=str,
+                        help='Directory containing the metagraph (.meta) file and the checkpoint (ckpt) file containing model parameters',
+                        default=facenet_model_checkpoint)
+    parser.add_argument('--output_file', type=str,
+                        help='Filename for the exported graphdef protobuf (.pb)', default=frozen_model)
     return parser.parse_args(argv)
 
 
