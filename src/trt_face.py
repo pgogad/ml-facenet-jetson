@@ -70,6 +70,7 @@ class Recognition:
     def identify(self, image):
         # faces = self.detect.find_faces(image)
         embedding = self.encoder.generate_embedding(image)
+        print("Embeddings generated")
         name = self.identifier.identify(embedding)
         return embedding, name
 
@@ -80,6 +81,7 @@ class Identifier:
             self.model, self.class_names = pickle.load(infile)
 
     def identify(self, face):
+        print("Predicting face")
         if face is not None:
             predictions = self.model.predict_proba([face])
             best_class_indices = np.argmax(predictions, axis=1)
