@@ -97,8 +97,7 @@ class Encoder:
         images_placeholder = tf.get_default_graph().get_tensor_by_name("input:0")
         embeddings = tf.get_default_graph().get_tensor_by_name("embeddings:0")
         phase_train_placeholder = tf.get_default_graph().get_tensor_by_name("phase_train:0")
-
-        prewhiten_face = facenet.prewhiten(face.image)
+        prewhiten_face = facenet.prewhiten(face)
 
         # Run forward pass to calculate embeddings
         feed_dict = {images_placeholder: [prewhiten_face], phase_train_placeholder: False}
