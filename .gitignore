@@ -7,3 +7,7 @@ src/.DS_Store
 .DS_Store
 
 src/20180402-114759/
+src/mtcnn/chobj/
+src/mtcnn/det1.engine
+src/mtcnn/det2.engine
+src/mtcnn/det3.engine
