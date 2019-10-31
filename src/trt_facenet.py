@@ -6,7 +6,8 @@ import trt_face
 
 from utils.camera import add_camera_args, Camera
 from utils.display import open_window, set_display
-from utils.mtcnn import TrtMtcnn
+
+# from utils.mtcnn import TrtMtcnn
 
 WINDOW_NAME = 'TestWindow'
 BBOX_COLOR = (0, 255, 0)  # green
@@ -19,12 +20,13 @@ def parse_args():
     parser = argparse.ArgumentParser(description=desc)
     parser = add_camera_args(parser)
     parser.add_argument('--minsize', type=int, default=40, help='minsize (in pixels) for detection [40]')
+    parser.add_argument('--device', type=int, default='mac', help='minsize (in pixels) for detection [40]')
     args = parser.parse_args()
     return args
 
 
-def show_faces(img):
-    recognizer.identify(img)
+def show_faces(img, device):
+    recognizer.identify(img, device)
     # for bb, ll in zip(boxes, landmarks):
     #     x1, y1, x2, y2 = int(bb[0]), int(bb[1]), int(bb[2]), int(bb[3])
     #     croped_img = img[y1:y2, x1:x2]
@@ -33,7 +35,7 @@ def show_faces(img):
     #     cv2.rectangle(img, (x1, y1), (x2, y2), BBOX_COLOR, 2)
 
 
-def detect_faces(cam, mtcnn, minsize=40):
+def detect_faces(cam, minsize=40, device='mac'):
     full_scrn = False
     # fps = 0.0
     # tic = time.time()
@@ -64,15 +66,14 @@ def main():
     if not cam.is_opened:
         sys.exit('Failed to open camera!')
 
-    mtcnn = TrtMtcnn()
+    # mtcnn = TrtMtcnn()
     cam.start()
     open_window(WINDOW_NAME, width=640, height=480, title='MTCNN Window')
-    detect_faces(cam, mtcnn)
+    detect_faces(cam)
 
     cam.stop()
     cam.release()
     cv2.destroyAllWindows()
-    del mtcnn
 
 
 if __name__ == '__main__':

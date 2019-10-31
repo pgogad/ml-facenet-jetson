@@ -1,44 +1,21 @@
 # coding=utf-8
 """Face Detection and Recognition"""
-# MIT License
-#
-# Copyright (c) 2017 François Gervais
-#
-# This is the work of David Sandberg and shanren7 remodelled into a
-# high level container. It's an attempt to simplify the use of such
-# technology and provide an easy to use facial recognition package.
-#
-# https://github.com/davidsandberg/facenet
-# https://github.com/shanren7/real_time_face_recognition
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in all
-# copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
 
 import pickle
-
+import os
 import numpy as np
 import tensorflow as tf
 from scipy import misc
 
+import detect_face
 import facenet
 from utils.mtcnn import TrtMtcnn
 
+BASE_DIR = os.path.dirname(__file__)
+
 gpu_memory_fraction = 0.3
+# facenet_model_checkpoint = os.path.join(BASE_DIR, '20180402-114759')
+# classifier_model = os.path.join(BASE_DIR, '20180402-114759', 'my_classifier.pkl')
 facenet_model_checkpoint = '/home/pawan/20180408-102900'
 # facenet_model_checkpoint = '/home/pawan/20180408-102900/frozen_graph.pb'
 classifier_model = '/home/pawan/20180408-102900/my_classifier.pkl'
@@ -55,8 +32,8 @@ class Face:
 
 
 class Recognition:
-    def __init__(self):
-        self.detect = Detection()
+    def __init__(self, device='mac'):
+        self.detect = Detection(device=device)
         self.encoder = Encoder()
         self.identifier = Identifier()
 
@@ -69,13 +46,14 @@ class Recognition:
     #     face.embedding = self.encoder.generate_embedding(face)
     #     return faces
 
-    def identify(self, image):
+    def identify(self, image, device):
         faces = self.detect.find_faces(image)
-        print("Found %s faces", str(len(faces)))
+        print("Found %s faces" % str(len(faces)))
         for face in faces:
-            embedding = self.encoder.generate_embedding(face)
+            embedding = self.encoder.generate_embedding(face.image)
             print("Embeddings generated")
             name = self.identifier.identify(embedding)
+            print("Found %s" % name)
             face.name = name
             # return embedding, name
 
@@ -116,24 +94,37 @@ class Detection:
     minsize = 20  # minimum size of face
     threshold = [0.6, 0.7, 0.7]  # three steps's threshold
     factor = 0.709  # scale factor
-    face_crop_margin = 32
-    face_crop_size = 160
 
-    def __init__(self, face_crop_size=160, face_crop_margin=32):
-        self.mtcnn = TrtMtcnn()
+    # face_crop_margin = 32
+    # face_crop_size = 160
 
-    # def _setup_mtcnn(self):
-    #     with tf.Graph().as_default():
-    #         gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=gpu_memory_fraction)
-    #         sess = tf.Session(config=tf.ConfigProto(gpu_options=gpu_options, log_device_placement=False))
-    #         with sess.as_default():
-    #             return align.detect_face.create_mtcnn(sess, None)
+    def __init__(self, face_crop_size=160, face_crop_margin=32, device='mac'):
+        self.pnet, self.rnet, self.onet = self._setup_mtcnn()
+        self.face_crop_size = face_crop_size
+        self.face_crop_margin = face_crop_margin
 
-    def find_faces(self, image):
+    def _setup_mtcnn(self, device='mac'):
+
+        if device == 'mac':
+            with tf.Graph().as_default():
+                gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=gpu_memory_fraction)
+                sess = tf.Session(config=tf.ConfigProto(gpu_options=gpu_options, log_device_placement=False))
+                with sess.as_default():
+                    return detect_face.create_mtcnn(sess, None)
+        else:
+            self.mtcnn = TrtMtcnn()
+
+    def find_faces(self, image, device):
         faces = []
 
-        dets, landmarks = self.mtcnn.detect(image, minsize=self.minsize)
-        for bb, ll in zip(dets, landmarks):
+        if device == 'mac':
+            bounding_boxes, _ = detect_face.detect_face(image, self.minsize,
+                                                        self.pnet, self.rnet, self.onet,
+                                                        self.threshold, self.factor)
+        else:
+            bounding_boxes, landmarks = self.mtcnn.detect(minsize=self.minsize)
+
+        for bb in bounding_boxes:
             face = Face()
             face.container_image = image
             face.bounding_box = np.zeros(4, dtype=np.int32)
@@ -149,3 +140,34 @@ class Detection:
             faces.append(face)
 
         return faces
+
+    # def __init__(self, face_crop_size=160, face_crop_margin=32):
+    #     self.mtcnn = TrtMtcnn()
+
+    # def _setup_mtcnn(self):
+    #     with tf.Graph().as_default():
+    #         gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=gpu_memory_fraction)
+    #         sess = tf.Session(config=tf.ConfigProto(gpu_options=gpu_options, log_device_placement=False))
+    #         with sess.as_default():
+    #             return align.detect_face.create_mtcnn(sess, None)
+
+    # def find_faces(self, image):
+    #     faces = []
+    #
+    #     dets, landmarks = self.mtcnn.detect(image, minsize=self.minsize)
+    #     for bb, ll in zip(dets, landmarks):
+    #         face = Face()
+    #         face.container_image = image
+    #         face.bounding_box = np.zeros(4, dtype=np.int32)
+    #
+    #         img_size = np.asarray(image.shape)[0:2]
+    #         face.bounding_box[0] = np.maximum(bb[0] - self.face_crop_margin / 2, 0)
+    #         face.bounding_box[1] = np.maximum(bb[1] - self.face_crop_margin / 2, 0)
+    #         face.bounding_box[2] = np.minimum(bb[2] + self.face_crop_margin / 2, img_size[1])
+    #         face.bounding_box[3] = np.minimum(bb[3] + self.face_crop_margin / 2, img_size[0])
+    #         cropped = image[face.bounding_box[1]:face.bounding_box[3], face.bounding_box[0]:face.bounding_box[2], :]
+    #         face.image = misc.imresize(cropped, (self.face_crop_size, self.face_crop_size), interp='bilinear')
+    #
+    #         faces.append(face)
+    #
+    #     return faces

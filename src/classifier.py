@@ -134,19 +134,27 @@ def split_dataset(dataset, min_nrof_images_per_class, nrof_train_images_per_clas
     return train_set, test_set
 
 
+BASE_DIR = os.path.dirname(__file__)
+ALIGNED_PICS = os.path.join(BASE_DIR, 'lfw_aligned')
+facenet_model_checkpoint = os.path.join(BASE_DIR, '20180402-114759')
+classifier_model = os.path.join(BASE_DIR, '20180402-114759', 'my_classifier.pkl')
+
+
 def parse_arguments(argv):
     parser = argparse.ArgumentParser()
 
     parser.add_argument('--mode', type=str, choices=['TRAIN', 'CLASSIFY'],
                         help='Indicates if a new classifier should be trained or a classification ' +
                              'model should be used for classification', default='CLASSIFY')
-    parser.add_argument('data_dir', type=str,
-                        help='Path to the data directory containing aligned LFW face patches.')
-    parser.add_argument('model', type=str,
-                        help='Could be either a directory containing the meta_file and ckpt_file or a model protobuf (.pb) file')
-    parser.add_argument('classifier_filename',
+    parser.add_argument('--data_dir', type=str,
+                        help='Path to the data directory containing aligned LFW face patches.', default=ALIGNED_PICS)
+    parser.add_argument('--model', type=str,
+                        help='Could be either a directory containing the meta_file and ckpt_file or a model protobuf (.pb) file',
+                        default=facenet_model_checkpoint)
+    parser.add_argument('--classifier_filename',
                         help='Classifier model file name as a pickle (.pkl) file. ' +
-                             'For training this is the output and for classification this is an input.')
+                             'For training this is the output and for classification this is an input.',
+                        default=classifier_model)
     parser.add_argument('--use_split_dataset',
                         help='Indicates that the dataset specified by data_dir should be split into a training and test set. ' +
                              'Otherwise a separate test set can be specified using the test_data_dir option.',
