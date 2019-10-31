@@ -11,3 +11,4 @@ src/mtcnn/chobj/
 src/mtcnn/det1.engine
 src/mtcnn/det2.engine
 src/mtcnn/det3.engine
+src/pytrt.cpython-36m-aarch64-linux-gnu.so
