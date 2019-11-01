@@ -100,6 +100,7 @@ def freeze_graph_def(sess, input_graph_def, output_node_names):
 BASE_DIR = os.path.dirname(__file__)
 facenet_model_checkpoint = os.path.join(BASE_DIR, '20180402-114759')
 frozen_model = os.path.join(BASE_DIR, '20180402-114759', 'my_frozen.pb')
+frozen_model_uff = os.path.join(BASE_DIR, '20180402-114759', 'my_frozen.uff')
 
 
 def parse_arguments(argv):
@@ -113,7 +114,7 @@ def parse_arguments(argv):
     parser.add_argument('--create_uff', type=bool,
                         help='Should we create deep stream interface', default=False)
     parser.add_argument('--output_uff_file', type=str,
-                        help='Filename for the exported deep stream interface (.uff)', default=frozen_model)
+                        help='Filename for the exported deep stream interface (.uff)', default=frozen_model_uff)
     return parser.parse_args(argv)
 
 
