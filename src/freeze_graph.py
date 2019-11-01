@@ -111,9 +111,9 @@ def parse_arguments(argv):
     parser.add_argument('--output_file', type=str,
                         help='Filename for the exported graphdef protobuf (.pb)', default=frozen_model)
     parser.add_argument('--create_uff', type=bool,
-                        help='Filename for the exported graphdef protobuf (.pb)', default=False)
+                        help='Should we create deep stream interface', default=False)
     parser.add_argument('--output_uff_file', type=str,
-                        help='Filename for the exported graphdef protobuf (.pb)', default=frozen_model)
+                        help='Filename for the exported deep stream interface (.uff)', default=frozen_model)
     return parser.parse_args(argv)
 
 
