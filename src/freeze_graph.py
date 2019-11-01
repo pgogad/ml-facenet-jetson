@@ -34,6 +34,7 @@ import os
 import sys
 import facenet
 from six.moves import xrange  # @UnresolvedImport
+import uff
 
 
 def main(args):
@@ -62,6 +63,9 @@ def main(args):
         with tf.gfile.GFile(args.output_file, 'wb') as f:
             f.write(output_graph_def.SerializeToString())
         print("%d ops in the final graph: %s" % (len(output_graph_def.node), args.output_file))
+
+        if args.create_uff:
+            uff_model = uff.from_tensorflow_frozen_model(args.output_file, output_filename=args.output_uff_file)
 
 
 def freeze_graph_def(sess, input_graph_def, output_node_names):
@@ -105,6 +109,10 @@ def parse_arguments(argv):
                         help='Directory containing the metagraph (.meta) file and the checkpoint (ckpt) file containing model parameters',
                         default=facenet_model_checkpoint)
     parser.add_argument('--output_file', type=str,
+                        help='Filename for the exported graphdef protobuf (.pb)', default=frozen_model)
+    parser.add_argument('--create_uff', type=bool,
+                        help='Filename for the exported graphdef protobuf (.pb)', default=False)
+    parser.add_argument('--output_uff_file', type=str,
                         help='Filename for the exported graphdef protobuf (.pb)', default=frozen_model)
     return parser.parse_args(argv)
 
