@@ -306,7 +306,7 @@ def normL2Vector(bottleNeck):
     return vector.astype(np.float32)
 
 
-def convertTf2Caffe(model_dir, saveDir, embedding_size=512):
+def convertTf2Caffe(saveDir, embedding_size=512, model_dir='/home/pawan/20180408-102900'):
     with tf.Session() as sess:
         # load_model(model_dir)
 
@@ -447,7 +447,7 @@ def mtcnnDetect(img):
 
 ### Step 1: tensorflow to caffemodel
 tf_model_dir = '~/workspace/ml-facenet-jetson/src/20180402-114759'
-convertTf2Caffe(tf_model_dir, '~/workspace/ml-facenet-jetson/src/resnet_models', EMBEDDING_SIZE)
+convertTf2Caffe('~/workspace/ml-facenet-jetson/src/resnet_models/save', embedding_size=EMBEDDING_SIZE)
 
 ### Step 2: caffemodel to CoreML
 ### use parameter (image_input_names='data') ==> input CVPixelBufferRef in iOS
