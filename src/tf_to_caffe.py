@@ -8,12 +8,11 @@ import tensorflow as tf
 import numpy as np
 import cv2
 from caffe.proto import caffe_pb2
-import coremltools
 
 import sys
 
-sys.path.append("mtcnn")
-import mtcnn
+# sys.path.append("mtcnn")
+# import mtcnn
 
 from time import time
 
@@ -85,36 +84,6 @@ def Block35_Repeat(sess, net):
         net.params[caffeLayerName][0].data[...] = var1.transpose((3, 2, 0, 1))
         var1 = sess.run(tf.get_default_graph().get_tensor_by_name(tfLayerName + '/biases:0'))
         net.params[caffeLayerName][1].data[...] = var1  # Conv Bias
-
-    ########## Origin Style
-    # caffeLayerName = 'block35_1/Branch_0/Conv2d_1x1'
-    # tfLayerName = 'InceptionResnetV1/Repeat/block35_1/Branch_0/Conv2d_1x1'
-    # net = Conv_BN_Scale_Relu(caffeLayerName, tfLayerName, sess, net)
-    #
-    # caffeLayerName = 'block35_1/Branch_1/Conv2d_0a_1x1'
-    # tfLayerName = 'InceptionResnetV1/Repeat/block35_1/Branch_1/Conv2d_0a_1x1'
-    # net = Conv_BN_Scale_Relu(caffeLayerName, tfLayerName, sess, net)
-    # caffeLayerName = 'block35_1/Branch_1/Conv2d_0b_3x3'
-    # tfLayerName = 'InceptionResnetV1/Repeat/block35_1/Branch_1/Conv2d_0b_3x3'
-    # net = Conv_BN_Scale_Relu(caffeLayerName, tfLayerName, sess, net)
-    #
-    # caffeLayerName = 'block35_1/Branch_2/Conv2d_0a_1x1'
-    # tfLayerName = 'InceptionResnetV1/Repeat/block35_1/Branch_2/Conv2d_0a_1x1'
-    # net = Conv_BN_Scale_Relu(caffeLayerName, tfLayerName, sess, net)
-    # caffeLayerName = 'block35_1/Branch_2/Conv2d_0b_3x3'
-    # tfLayerName = 'InceptionResnetV1/Repeat/block35_1/Branch_2/Conv2d_0b_3x3'
-    # net = Conv_BN_Scale_Relu(caffeLayerName, tfLayerName, sess, net)
-    # caffeLayerName = 'block35_1/Branch_2/Conv2d_0c_3x3'
-    # tfLayerName = 'InceptionResnetV1/Repeat/block35_1/Branch_2/Conv2d_0c_3x3'
-    # net = Conv_BN_Scale_Relu(caffeLayerName, tfLayerName, sess, net)
-    #
-    # caffeLayerName = 'block35_1/Conv2d_1x1'
-    # tfLayerName = 'InceptionResnetV1/Repeat/block35_1/Conv2d_1x1'
-    # var1 = sess.run(tf.get_default_graph().get_tensor_by_name(tfLayerName+'/weights:0'))
-    # net.params[caffeLayerName][0].data[...] = var1.transpose((3, 2, 0, 1))
-    # var1 = sess.run(tf.get_default_graph().get_tensor_by_name(tfLayerName+'/biases:0'))
-    # net.params[caffeLayerName][1].data[...] = var1  # Conv Bias
-
     return net
 
 
@@ -421,33 +390,34 @@ def caffemodel2Prototxt(modelName, savePath):
         f.close()
 
 
-def mtcnnDetect(img):
-    minsize = 40
-    caffe_model_path = "./mtcnn"
-
-    threshold = [0.8, 0.8, 0.6]
-    factor = 0.709
-
-    caffe.set_mode_cpu()
-    PNet = caffe.Net(caffe_model_path + "/det1.prototxt", caffe_model_path + "/det1.caffemodel", caffe.TEST)
-    RNet = caffe.Net(caffe_model_path + "/det2.prototxt", caffe_model_path + "/det2.caffemodel", caffe.TEST)
-    ONet = caffe.Net(caffe_model_path + "/det3.prototxt", caffe_model_path + "/det3.caffemodel", caffe.TEST)
-
-    img_matlab = img.copy()
-    tmp = img_matlab[:, :, 2].copy()
-    img_matlab[:, :, 2] = img_matlab[:, :, 0]
-    img_matlab[:, :, 0] = tmp
-
-    boundingboxes, points = mtcnn.detect_face(img_matlab, minsize, PNet, RNet, ONet, threshold, False, factor)
-    warped = img_matlab[int(boundingboxes[0][1]):int(boundingboxes[0][3]),
-             int(boundingboxes[0][0]):int(boundingboxes[0][2])]
-    print(int(boundingboxes[0][1]), int(boundingboxes[0][3]), int(boundingboxes[0][0]), int(boundingboxes[0][2]))
-    return warped
+# def mtcnnDetect(img):
+#     minsize = 40
+#     caffe_model_path = "./mtcnn"
+#
+#     threshold = [0.8, 0.8, 0.6]
+#     factor = 0.709
+#
+#     caffe.set_mode_cpu()
+#     PNet = caffe.Net(caffe_model_path + "/det1.prototxt", caffe_model_path + "/det1.caffemodel", caffe.TEST)
+#     RNet = caffe.Net(caffe_model_path + "/det2.prototxt", caffe_model_path + "/det2.caffemodel", caffe.TEST)
+#     ONet = caffe.Net(caffe_model_path + "/det3.prototxt", caffe_model_path + "/det3.caffemodel", caffe.TEST)
+#
+#     img_matlab = img.copy()
+#     tmp = img_matlab[:, :, 2].copy()
+#     img_matlab[:, :, 2] = img_matlab[:, :, 0]
+#     img_matlab[:, :, 0] = tmp
+#
+#     boundingboxes, points = mtcnn.detect_face(img_matlab, minsize, PNet, RNet, ONet, threshold, False, factor)
+#     warped = img_matlab[int(boundingboxes[0][1]):int(boundingboxes[0][3]),
+#              int(boundingboxes[0][0]):int(boundingboxes[0][2])]
+#     print(int(boundingboxes[0][1]), int(boundingboxes[0][3]), int(boundingboxes[0][0]), int(boundingboxes[0][2]))
+#     return warped
 
 
 ### Step 1: tensorflow to caffemodel
 tf_model_dir = '~/workspace/ml-facenet-jetson/src/20180402-114759'
-convertTf2Caffe('~/workspace/ml-facenet-jetson/src/resnet_models/save', embedding_size=EMBEDDING_SIZE)
+convertTf2Caffe('~/workspace/ml-facenet-jetson/src/resnet_models/save', embedding_size=EMBEDDING_SIZE,
+                model_dir=tf_model_dir)
 
 ### Step 2: caffemodel to CoreML
 ### use parameter (image_input_names='data') ==> input CVPixelBufferRef in iOS
