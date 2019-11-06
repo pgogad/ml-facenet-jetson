@@ -444,4 +444,4 @@ imgPath = 'test.png'
 img = cv2.imread(imgPath)
 crop = mtcnnDetect(img)
 caffe_model_dir = '/home/azureadmin/workspace/ml-facenet-jetson/src/resnet_models'
-calcCaffeVector(crop, caffe_model_dir, EMBEDDING_SIZE)
+print(calcCaffeVector(crop, caffe_model_dir, EMBEDDING_SIZE))
