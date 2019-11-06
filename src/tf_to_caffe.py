@@ -12,7 +12,7 @@ from caffe.proto import caffe_pb2
 import sys
 
 sys.path.append("mtcnn_caffe")
-import mtcnn_caffe.mtcnn_caffe as mtcnn_caffe
+from mtcnn_caffe import mtcnn_caffe
 
 from time import time
 
