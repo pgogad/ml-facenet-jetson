@@ -30,8 +30,11 @@ class CaffeMtcnn:
         tmp = img_matlab[:, :, 2].copy()
         img_matlab[:, :, 2] = img_matlab[:, :, 0]
         img_matlab[:, :, 0] = tmp
+        tic = time.time()
         boundingboxes, points = mtcnn_caffe.detect_face(img_matlab, minsize, self.PNet, self.RNet, self.ONet,
                                                         self.threshold, False, self.factor)
+        toc = time.time()
+        print('Time taken for detection %s' % str(toc - tic))
         return boundingboxes, points
 
 
