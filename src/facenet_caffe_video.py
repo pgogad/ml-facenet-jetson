@@ -93,5 +93,12 @@ def main():
     del mtcnn
 
 
+def test_mtcnn_caffe():
+    mtcnn = CaffeMtcnn()
+    img = cv2.imread('/home/azureadmin/workspace/ml-facenet-jetson/src/test.png')
+    boundingboxes, points = mtcnn.detect(img)
+    print("Points ")
+
+
 if __name__ == '__main__':
-    main()
+    test_mtcnn_caffe()
