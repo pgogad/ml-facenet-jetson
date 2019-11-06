@@ -338,7 +338,13 @@ def convertTf2Caffe(saveDir, embedding_size=512, model_dir='/home/pawan/20180408
         # print(net.params['Conv2d_1a_3x3'][0].data[...])
 
 
-def calcCaffeVector(img, model_dir, embedding_size=512):
+def calcCaffeVector(img, model_dir, embedding_size=512, device='mac'):
+    if device == 'mac':
+        caffe.set_mode_cpu()
+    else:
+        caffe.set_mode_gpu()
+        caffe.set_device(0)
+
     img = cv2.resize(img, (FACE_FEED_SIZE, FACE_FEED_SIZE))
     prewhitened = prewhiten(img)[np.newaxis]
     inputCaffe = prewhitened.transpose((0, 3, 1, 2))  # [1,3,160,160]
@@ -390,14 +396,19 @@ def caffemodel2Prototxt(modelName, savePath):
         f.close()
 
 
-def mtcnnDetect(img):
+def mtcnnDetect(img, device='mac'):
     minsize = 40
     caffe_model_path = "/home/azureadmin/workspace/ml-facenet-jetson/src/mtcnn_caffe"
 
     threshold = [0.8, 0.8, 0.6]
     factor = 0.709
 
-    caffe.set_mode_cpu()
+    if device == 'mac':
+        caffe.set_mode_cpu()
+    else:
+        caffe.set_mode_gpu()
+        caffe.set_device(0)
+
     PNet = caffe.Net(caffe_model_path + "/det1.prototxt", caffe_model_path + "/det1.caffemodel", caffe.TEST)
     RNet = caffe.Net(caffe_model_path + "/det2.prototxt", caffe_model_path + "/det2.caffemodel", caffe.TEST)
     ONet = caffe.Net(caffe_model_path + "/det3.prototxt", caffe_model_path + "/det3.caffemodel", caffe.TEST)
@@ -444,4 +455,4 @@ imgPath = 'test.png'
 img = cv2.imread(imgPath)
 crop = mtcnnDetect(img)
 caffe_model_dir = '/home/azureadmin/workspace/ml-facenet-jetson/src/resnet_models'
-print(calcCaffeVector(crop, caffe_model_dir, EMBEDDING_SIZE))
+print(calcCaffeVector(crop, caffe_model_dir, EMBEDDING_SIZE, device='mac'))
