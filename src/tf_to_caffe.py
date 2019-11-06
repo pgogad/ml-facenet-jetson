@@ -392,7 +392,7 @@ def caffemodel2Prototxt(modelName, savePath):
 
 def mtcnnDetect(img):
     minsize = 40
-    caffe_model_path = "./mtcnn_caffe"
+    caffe_model_path = "/home/azureadmin/workspace/ml-facenet-jetson/src/mtcnn_caffe"
 
     threshold = [0.8, 0.8, 0.6]
     factor = 0.709
