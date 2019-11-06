@@ -28,7 +28,7 @@ def toc(fmt="Elapsed: %s s"):
 
 
 FACE_FEED_SIZE = 160  # default 160x160
-EMBEDDING_SIZE = 128  # face embedding vector output, default 512
+EMBEDDING_SIZE = 512  # face embedding vector output, default 512
 
 
 def load_model(model, input_map=None):  # load tf model from dir
@@ -443,5 +443,5 @@ def mtcnnDetect(img):
 imgPath = 'test.png'
 img = cv2.imread(imgPath)
 crop = mtcnnDetect(img)
-caffe_model_dir = '~/workspace/ml-facenet-jetson/src/resnet_models'
+caffe_model_dir = '/home/azureadmin/workspace/ml-facenet-jetson/src/resnet_models'
 calcCaffeVector(crop, caffe_model_dir, EMBEDDING_SIZE)
