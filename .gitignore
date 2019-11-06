@@ -12,3 +12,4 @@ src/mtcnn/det1.engine
 src/mtcnn/det2.engine
 src/mtcnn/det3.engine
 src/pytrt.cpython-36m-aarch64-linux-gnu.so
+src/resnet_models/inception_resnet_v1_conv1x1.caffemodel
