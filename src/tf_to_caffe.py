@@ -11,8 +11,8 @@ from caffe.proto import caffe_pb2
 
 import sys
 
-# sys.path.append("mtcnn")
-# import mtcnn
+sys.path.append("mtcnn_caffe")
+import mtcnn_caffe.mtcnn_caffe as mtcnn_caffe
 
 from time import time
 
@@ -230,7 +230,7 @@ def Bottleneck(sess, net):
 
 def Bottleneck_conv1x1(sess, net, embedding_size):
     caffeLayerName = 'Conv1x1_512'
-    if (embedding_size == 128):
+    if embedding_size == 128:
         caffeLayerName = 'Conv1x1_128'
 
     tfLayerName = 'InceptionResnetV1/Bottleneck'
@@ -390,34 +390,34 @@ def caffemodel2Prototxt(modelName, savePath):
         f.close()
 
 
-# def mtcnnDetect(img):
-#     minsize = 40
-#     caffe_model_path = "./mtcnn"
-#
-#     threshold = [0.8, 0.8, 0.6]
-#     factor = 0.709
-#
-#     caffe.set_mode_cpu()
-#     PNet = caffe.Net(caffe_model_path + "/det1.prototxt", caffe_model_path + "/det1.caffemodel", caffe.TEST)
-#     RNet = caffe.Net(caffe_model_path + "/det2.prototxt", caffe_model_path + "/det2.caffemodel", caffe.TEST)
-#     ONet = caffe.Net(caffe_model_path + "/det3.prototxt", caffe_model_path + "/det3.caffemodel", caffe.TEST)
-#
-#     img_matlab = img.copy()
-#     tmp = img_matlab[:, :, 2].copy()
-#     img_matlab[:, :, 2] = img_matlab[:, :, 0]
-#     img_matlab[:, :, 0] = tmp
-#
-#     boundingboxes, points = mtcnn.detect_face(img_matlab, minsize, PNet, RNet, ONet, threshold, False, factor)
-#     warped = img_matlab[int(boundingboxes[0][1]):int(boundingboxes[0][3]),
-#              int(boundingboxes[0][0]):int(boundingboxes[0][2])]
-#     print(int(boundingboxes[0][1]), int(boundingboxes[0][3]), int(boundingboxes[0][0]), int(boundingboxes[0][2]))
-#     return warped
+def mtcnnDetect(img):
+    minsize = 40
+    caffe_model_path = "./mtcnn_caffe"
+
+    threshold = [0.8, 0.8, 0.6]
+    factor = 0.709
+
+    caffe.set_mode_cpu()
+    PNet = caffe.Net(caffe_model_path + "/det1.prototxt", caffe_model_path + "/det1.caffemodel", caffe.TEST)
+    RNet = caffe.Net(caffe_model_path + "/det2.prototxt", caffe_model_path + "/det2.caffemodel", caffe.TEST)
+    ONet = caffe.Net(caffe_model_path + "/det3.prototxt", caffe_model_path + "/det3.caffemodel", caffe.TEST)
+
+    img_matlab = img.copy()
+    tmp = img_matlab[:, :, 2].copy()
+    img_matlab[:, :, 2] = img_matlab[:, :, 0]
+    img_matlab[:, :, 0] = tmp
+
+    boundingboxes, points = mtcnn_caffe.detect_face(img_matlab, minsize, PNet, RNet, ONet, threshold, False, factor)
+    warped = img_matlab[int(boundingboxes[0][1]):int(boundingboxes[0][3]),
+             int(boundingboxes[0][0]):int(boundingboxes[0][2])]
+    print(int(boundingboxes[0][1]), int(boundingboxes[0][3]), int(boundingboxes[0][0]), int(boundingboxes[0][2]))
+    return warped
 
 
 ### Step 1: tensorflow to caffemodel
-tf_model_dir = '~/workspace/ml-facenet-jetson/src/20180402-114759'
-convertTf2Caffe('~/workspace/ml-facenet-jetson/src/resnet_models/save', embedding_size=EMBEDDING_SIZE,
-                model_dir=tf_model_dir)
+# tf_model_dir = '~/workspace/ml-facenet-jetson/src/20180402-114759'
+# convertTf2Caffe('~/workspace/ml-facenet-jetson/src/resnet_models', embedding_size=EMBEDDING_SIZE,
+#                 model_dir=tf_model_dir)
 
 ### Step 2: caffemodel to CoreML
 ### use parameter (image_input_names='data') ==> input CVPixelBufferRef in iOS
@@ -440,8 +440,8 @@ convertTf2Caffe('~/workspace/ml-facenet-jetson/src/resnet_models/save', embeddin
 # calcTFVector(crop, tf_model_dir)
 #
 # ### Step 4: calculate embedding from caffe model
-# imgPath = '4550.jpg'
-# img = cv2.imread(imgPath)
-# crop = mtcnnDetect(img)
-# caffe_model_dir = '~/workspace/ml-facenet-jetson/src/resnet_models'
-# calcCaffeVector(crop, caffe_model_dir, EMBEDDING_SIZE)
+imgPath = 'test.png'
+img = cv2.imread(imgPath)
+crop = mtcnnDetect(img)
+caffe_model_dir = '~/workspace/ml-facenet-jetson/src/resnet_models'
+calcCaffeVector(crop, caffe_model_dir, EMBEDDING_SIZE)
