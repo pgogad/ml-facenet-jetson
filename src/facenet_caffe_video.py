@@ -96,8 +96,11 @@ def get_embeddings(img, face_caffe, boxes, landmarks):
         cropped = cv2.resize(cropped, (FACE_FEED_SIZE, FACE_FEED_SIZE))
         prewhitened = prewhiten(cropped)[np.newaxis]
         input_caffe = prewhitened.transpose((0, 3, 1, 2))  # [1,3,160,160]
-        print(input_caffe.shape)
-        return face_caffe.get_vector(input_caffe)
+        tic = time.time()
+        vector = face_caffe.get_vector(input_caffe)
+        toc = time.time()
+        print('Time taken for getting the vector : %s' % str(toc - tic))
+        return vector
 
 
 def loop_and_detect(cam, mtcnn, minsize):
