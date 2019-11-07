@@ -15,7 +15,7 @@ BBOX_COLOR = (0, 255, 0)  # green
 
 
 class CaffeMtcnn:
-    def __init__(self, caffe_model_path='/home/azureadmin/workspace/ml-facenet-jetson/src/mtcnn_caffe'):
+    def __init__(self, caffe_model_path='/home/pawan/workspace/ml-facenet-jetson/src/mtcnn_caffe'):
         self.threshold = [0.8, 0.8, 0.6]
         self.factor = 0.709
         self.PNet = caffe.Net(os.path.join(caffe_model_path, "det1.prototxt"),
@@ -98,7 +98,7 @@ def main():
 
 def test_mtcnn_caffe():
     mtcnn = CaffeMtcnn()
-    img = cv2.imread('/home/azureadmin/workspace/ml-facenet-jetson/src/test.png')
+    img = cv2.imread('/home/pawan/workspace/ml-facenet-jetson/src/test.png')
     boundingboxes, points = mtcnn.detect(img)
 
     for face in boundingboxes:
