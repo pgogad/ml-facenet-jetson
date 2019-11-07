@@ -24,7 +24,7 @@ class FacenetCaffe:
                  caffe_weights=os.path.join(HOME, 'ml-facenet-jetson/src/resnet_models/resnetInception-512.prototxt')):
         self.net = caffe.Net(caffe_weights, caffe_model, caffe.TEST)
 
-    def normL2Vector(bottleNeck):
+    def normL2Vector(self, bottleNeck):
         sum = 0
         for v in bottleNeck:
             sum += np.power(v, 2)
@@ -36,10 +36,11 @@ class FacenetCaffe:
 
     def get_vector(self, input):
         self.net.blobs['data'].data[...] = input
-        self.net.forward(data=np.asarray(input))
-        print('{}'.format(self.net.blobs['flatten'].data.squeeze()))
-        # vector = self.normL2Vector(self.net.blobs['flatten'].data.squeeze())
-        return None
+        # self.net.forward(data=np.asarray(input))
+        self.net.forward()
+        # print('{}'.format(self.net.blobs['flatten'].data.squeeze()))
+        vector = self.normL2Vector(self.net.blobs['flatten'].data.squeeze())
+        return vector
 
 
 class CaffeMtcnn:
