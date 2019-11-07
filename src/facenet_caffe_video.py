@@ -49,7 +49,7 @@ def parse_args():
 
 def show_faces(img, boxes, landmarks):
     for bb, ll in zip(boxes, landmarks):
-        x1, y1, x2, y2 = int(bb[0]), int(bb[1]), int(bb[2]), int(bb[3])
+        x1, y1, x2, y2 = int(bb[1]), int(bb[3]), int(bb[0]), int(bb[2])
         cv2.rectangle(img, (x1, y1), (x2, y2), BBOX_COLOR, 2)
 
 
