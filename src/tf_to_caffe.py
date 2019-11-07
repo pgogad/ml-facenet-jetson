@@ -360,8 +360,8 @@ def calcCaffeVector(img, model_dir, embedding_size=512, device='mac'):
     tic()
     net.forward()
     vector = normL2Vector(net.blobs['flatten'].data.squeeze())
-    print('Caffe Vector = {}'.format(vector))
     toc()
+    print('Caffe Vector = {}'.format(vector))
 
 
 def calcTFVector(img, model_dir):

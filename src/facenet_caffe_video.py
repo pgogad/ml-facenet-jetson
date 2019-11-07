@@ -112,4 +112,5 @@ def test_mtcnn_caffe():
 
 
 if __name__ == '__main__':
-    test_mtcnn_caffe()
+    # test_mtcnn_caffe()
+    main()
