@@ -13,9 +13,11 @@ from utils.display import open_window, set_display
 WINDOW_NAME = 'CaffeMtcnnDemo'
 BBOX_COLOR = (0, 255, 0)  # green
 
+HOME = '/home/pawan/workspace'
+
 
 class CaffeMtcnn:
-    def __init__(self, caffe_model_path='/home/pawan/workspace/ml-facenet-jetson/src/mtcnn_caffe'):
+    def __init__(self, caffe_model_path=os.path.join(HOME, 'ml-facenet-jetson/src/mtcnn_caffe')):
         self.threshold = [0.8, 0.8, 0.6]
         self.factor = 0.709
         self.PNet = caffe.Net(os.path.join(caffe_model_path, "det1.prototxt"),
@@ -43,14 +45,14 @@ def parse_args():
     parser = argparse.ArgumentParser(description=desc)
     parser = add_camera_args(parser)
     parser.add_argument('--minsize', type=int, default=40, help='minsize (in pixels) for detection [40]')
-    parser.add_argument('--device', type=str, default='mac', help='mac or jetson')
+    parser.add_argument('--device', type=str, default='mac', help='mac, jetson or linux')
     args = parser.parse_args()
     return args
 
 
 def show_faces(img, boxes, landmarks):
     for bb, ll in zip(boxes, landmarks):
-        x1, y1, x2, y2 = int(bb[1]), int(bb[3]), int(bb[0]), int(bb[2])
+        x1, y1, x2, y2 = int(bb[0]), int(bb[1]), int(bb[2]), int(bb[3])
         cv2.rectangle(img, (x1, y1), (x2, y2), BBOX_COLOR, 2)
 
 
@@ -73,8 +75,8 @@ def loop_and_detect(cam, mtcnn, minsize):
             set_display(WINDOW_NAME, full_scrn)
 
 
-def main():
-    args = parse_args()
+def main(args):
+    # args = parse_args()
     cam = Camera(args)
 
     if args.device == 'mac':
@@ -104,13 +106,20 @@ def test_mtcnn_caffe():
     caffe.set_mode_gpu()
     caffe.set_device(0)
     mtcnn = CaffeMtcnn()
-    img = cv2.imread('/home/pawan/workspace/ml-facenet-jetson/src/test.png')
+    img = cv2.imread(os.path.join(HOME, 'ml-facenet-jetson/src/test.png'))
     boundingboxes, points = mtcnn.detect(img)
 
     for face in boundingboxes:
-        print(int(face[1]), int(face[3]), int(face[0]), int(face[2]))
+        print(int(face[0]), int(face[1]), int(face[2]), int(face[3]))
 
 
 if __name__ == '__main__':
     # test_mtcnn_caffe()
-    main()
+    args = parse_args()
+    if args.device == 'mac':
+        HOME = '/Users/pawan/workspace'
+    elif args.device == 'linux':
+        HOME = '/home/azureadmin/workspace'
+    else:
+        HOME = '/home/pawan/workspace'
+    main(args)
