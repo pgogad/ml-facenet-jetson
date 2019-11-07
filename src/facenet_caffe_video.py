@@ -39,7 +39,6 @@ class CaffeMtcnn:
 
 
 def parse_args():
-    """Parse input arguments."""
     desc = 'Capture and display live camera video, while doing real-time face detection with TrtMtcnn on Jetson Nano'
     parser = argparse.ArgumentParser(description=desc)
     parser = add_camera_args(parser)
@@ -49,17 +48,13 @@ def parse_args():
 
 
 def show_faces(img, boxes, landmarks):
-    """Draw bounding boxes and face landmarks on image."""
     for bb, ll in zip(boxes, landmarks):
         x1, y1, x2, y2 = int(bb[0]), int(bb[1]), int(bb[2]), int(bb[3])
         cv2.rectangle(img, (x1, y1), (x2, y2), BBOX_COLOR, 2)
 
 
 def loop_and_detect(cam, mtcnn, minsize):
-    """Continuously capture images from camera and do face detection."""
     full_scrn = False
-    fps = 0.0
-    tic = time.time()
     while True:
         if cv2.getWindowProperty(WINDOW_NAME, 0) < 0:
             break

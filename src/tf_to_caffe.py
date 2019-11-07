@@ -408,6 +408,7 @@ def mtcnnDetect(img, device='mac'):
     else:
         caffe.set_mode_gpu()
         caffe.set_device(0)
+        caffe_model_path = "/home/pawan/workspace/ml-facenet-jetson/src/mtcnn_caffe"
 
     PNet = caffe.Net(caffe_model_path + "/det1.prototxt", caffe_model_path + "/det1.caffemodel", caffe.TEST)
     RNet = caffe.Net(caffe_model_path + "/det2.prototxt", caffe_model_path + "/det2.caffemodel", caffe.TEST)
