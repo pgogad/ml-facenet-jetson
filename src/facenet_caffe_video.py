@@ -1,10 +1,11 @@
 import argparse
+import os
 import sys
 import time
-import os
 
 import caffe
 import cv2
+import numpy as np
 
 from mtcnn_caffe import mtcnn_caffe
 from utils.camera import add_camera_args, Camera
@@ -12,8 +13,32 @@ from utils.display import open_window, set_display
 
 WINDOW_NAME = 'CaffeMtcnnDemo'
 BBOX_COLOR = (0, 255, 0)  # green
+FACE_FEED_SIZE = 160
 
 HOME = '/home/pawan/workspace'
+
+
+class FacenetCaffe:
+    def __init__(self, caffe_model=os.path.join(HOME,
+                                                'ml-facenet-jetson/src/resnet_models/inception_resnet_v1_conv1x1.caffemodel'),
+                 caffe_weights=os.path.join(HOME, 'ml-facenet-jetson/src/resnet_models/resnetInception-512.prototxt')):
+        self.net = caffe.Net(caffe_weights, caffe_model, caffe.TEST)
+
+    def normL2Vector(bottleNeck):
+        sum = 0
+        for v in bottleNeck:
+            sum += np.power(v, 2)
+        sqrt = np.max([np.sqrt(sum), 0.0000000001])
+        vector = np.zeros((bottleNeck.shape))
+        for (i, v) in enumerate(bottleNeck):
+            vector[i] = v / sqrt
+        return vector.astype(np.float32)
+
+    def get_vector(self, input):
+        self.net.blobs['data'].data[...] = input
+        self.net.forward()
+        vector = self.normL2Vector(self.net.blobs['flatten'].data.squeeze())
+        return vector
 
 
 class CaffeMtcnn:
@@ -56,8 +81,28 @@ def show_faces(img, boxes, landmarks):
         cv2.rectangle(img, (x1, y1), (x2, y2), BBOX_COLOR, 2)
 
 
+def prewhiten(x):
+    mean = np.mean(x)
+    std = np.std(x)
+    print(mean, std)
+    std_adj = np.maximum(std, 1.0 / np.sqrt(x.size))
+    y = np.multiply(np.subtract(x, mean), 1 / std_adj)
+    return y
+
+
+def get_embeddings(img, face_caffe, boxes, landmarks):
+    for bb, ll in zip(boxes, landmarks):
+        cropped = img[bb[1]:bb[3], bb[0]:bb[2], :]
+        cropped = cv2.resize(cropped, (FACE_FEED_SIZE, FACE_FEED_SIZE))
+        prewhitened = prewhiten(cropped)[np.newaxis]
+        input_caffe = prewhitened.transpose((0, 3, 1, 2))  # [1,3,160,160]
+        print(input_caffe.shape)
+        return face_caffe.get_vector(input_caffe)
+
+
 def loop_and_detect(cam, mtcnn, minsize):
     full_scrn = False
+    face_caffe = FacenetCaffe()
     while True:
         if cv2.getWindowProperty(WINDOW_NAME, 0) < 0:
             break
@@ -66,9 +111,11 @@ def loop_and_detect(cam, mtcnn, minsize):
             dets, landmarks = mtcnn.detect(img, minsize=minsize)
             print('{} face(s) found'.format(len(dets)))
             show_faces(img, dets, landmarks)
+            print('Caffe Vector = {}'.format(get_embeddings(img, dets, landmarks)))
             cv2.imshow(WINDOW_NAME, img)
         key = cv2.waitKey(1)
         if key == 27:  # ESC key: quit program
+            del face_caffe
             break
         elif key == ord('F') or key == ord('f'):  # Toggle fullscreen
             full_scrn = not full_scrn
