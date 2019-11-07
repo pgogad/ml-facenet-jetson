@@ -92,7 +92,8 @@ def prewhiten(x):
 
 def get_embeddings(img, face_caffe, boxes, landmarks):
     for bb, ll in zip(boxes, landmarks):
-        cropped = img[bb[1]:bb[3], bb[0]:bb[2], :]
+        x1, y1, x2, y2 = int(bb[0]), int(bb[1]), int(bb[2]), int(bb[3])
+        cropped = img[y1:y2, x1:x2, :]
         cropped = cv2.resize(cropped, (FACE_FEED_SIZE, FACE_FEED_SIZE))
         prewhitened = prewhiten(cropped)[np.newaxis]
         input_caffe = prewhitened.transpose((0, 3, 1, 2))  # [1,3,160,160]
