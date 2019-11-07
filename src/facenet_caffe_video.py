@@ -48,6 +48,13 @@ def parse_args():
     return args
 
 
+def show_faces(img, boxes, landmarks):
+    """Draw bounding boxes and face landmarks on image."""
+    for bb, ll in zip(boxes, landmarks):
+        x1, y1, x2, y2 = int(bb[0]), int(bb[1]), int(bb[2]), int(bb[3])
+        cv2.rectangle(img, (x1, y1), (x2, y2), BBOX_COLOR, 2)
+
+
 def loop_and_detect(cam, mtcnn, minsize):
     """Continuously capture images from camera and do face detection."""
     full_scrn = False
@@ -61,13 +68,7 @@ def loop_and_detect(cam, mtcnn, minsize):
             dets, landmarks = mtcnn.detect(img, minsize=minsize)
             print('{} face(s) found'.format(len(dets)))
             show_faces(img, dets, landmarks)
-            show_fps(img, fps)
             cv2.imshow(WINDOW_NAME, img)
-            toc = time.time()
-            curr_fps = 1.0 / (toc - tic)
-            # calculate an exponentially decaying average of fps number
-            fps = curr_fps if fps == 0.0 else (fps * 0.95 + curr_fps * 0.05)
-            tic = toc
         key = cv2.waitKey(1)
         if key == 27:  # ESC key: quit program
             break
@@ -97,6 +98,8 @@ def main():
 
 
 def test_mtcnn_caffe():
+    caffe.set_mode_gpu()
+    caffe.set_device(0)
     mtcnn = CaffeMtcnn()
     img = cv2.imread('/home/pawan/workspace/ml-facenet-jetson/src/test.png')
     boundingboxes, points = mtcnn.detect(img)
