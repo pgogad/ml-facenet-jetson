@@ -36,7 +36,7 @@ class FacenetCaffe:
 
     def get_vector(self, input):
         self.net.blobs['data'].data[...] = input
-        self.net.forward()
+        self.net.forward(data=np.asarray(input))
         vector = self.normL2Vector(self.net.blobs['flatten'].data.squeeze())
         return vector
 
