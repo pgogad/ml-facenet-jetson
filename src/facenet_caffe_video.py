@@ -43,6 +43,7 @@ def parse_args():
     parser = argparse.ArgumentParser(description=desc)
     parser = add_camera_args(parser)
     parser.add_argument('--minsize', type=int, default=40, help='minsize (in pixels) for detection [40]')
+    parser.add_argument('--device', type=str, default='mac', help='mac or jetson')
     args = parser.parse_args()
     return args
 
@@ -75,6 +76,13 @@ def loop_and_detect(cam, mtcnn, minsize):
 def main():
     args = parse_args()
     cam = Camera(args)
+
+    if args.device == 'mac':
+        caffe.set_mode_cpu()
+    else:
+        caffe.set_mode_gpu()
+        caffe.set_device(0)
+
     cam.open()
     if not cam.is_opened:
         sys.exit('Failed to open camera!')
