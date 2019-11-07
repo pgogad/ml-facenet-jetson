@@ -114,7 +114,7 @@ def loop_and_detect(cam, mtcnn, minsize):
             dets, landmarks = mtcnn.detect(img, minsize=minsize)
             print('{} face(s) found'.format(len(dets)))
             show_faces(img, dets, landmarks)
-            print('Caffe Vector = {}'.format(get_embeddings(img, dets, landmarks)))
+            print('Caffe Vector = {}'.format(get_embeddings(img, face_caffe, dets, landmarks)))
             cv2.imshow(WINDOW_NAME, img)
         key = cv2.waitKey(1)
         if key == 27:  # ESC key: quit program
