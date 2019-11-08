@@ -18,6 +18,11 @@ FACE_FEED_SIZE = 160
 HOME = '/home/pawan/workspace'
 
 
+class CaffeClasifier:
+    def __init__(self, path=os.path.join(HOME, 'ml-facenet-jetson/src/resnet_models/classifier.pkl')):
+        self.classifier = ''
+
+
 class FacenetCaffe:
     def __init__(self, caffe_model=os.path.join(HOME,
                                                 'ml-facenet-jetson/src/resnet_models/inception_resnet_v1_conv1x1.caffemodel'),
@@ -36,9 +41,7 @@ class FacenetCaffe:
 
     def get_vector(self, input):
         self.net.blobs['data'].data[...] = input
-        # self.net.forward(data=np.asarray(input))
         self.net.forward()
-        # print('{}'.format(self.net.blobs['flatten'].data.squeeze()))
         vector = self.normL2Vector(self.net.blobs['flatten'].data.squeeze())
         return vector
 

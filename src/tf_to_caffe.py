@@ -1,5 +1,7 @@
 import os
 
+import caffe2
+
 import facenet
 
 os.environ['GLOG_minloglevel'] = '2'
@@ -355,6 +357,7 @@ def calcCaffeVector(img, model_dir, embedding_size=512, device='mac'):
         caffePrototxt = os.path.join(model_dir, 'resnetInception-128.prototxt')
 
     caffemodel = os.path.join(model_dir, 'inception_resnet_v1_conv1x1.caffemodel')
+    caffe2.python.predictor
     net = caffe.Net(caffePrototxt, caffemodel, caffe.TEST)
     net.blobs['data'].data[...] = inputCaffe
     tic()
