@@ -14,3 +14,4 @@ src/mtcnn/det3.engine
 src/pytrt.cpython-36m-aarch64-linux-gnu.so
 src/resnet_models/inception_resnet_v1_conv1x1.caffemodel
 src/.DS_Store
+caffe_blvc/bvlc_reference_caffenet.caffemodel
