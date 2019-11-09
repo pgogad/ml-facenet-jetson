@@ -9,9 +9,16 @@ import caffe
 from caffe.proto import caffe_pb2
 import lmdb
 
+from pathlib import Path
+
+HOME = str(Path.home())
+
 # Size of images
 IMAGE_WIDTH = 160
 IMAGE_HEIGHT = 160
+
+train_lmdb = os.path.join(str(Path.home()), 'workspace', 'ml-facenet-jetson/caffe_blvc/train_lmdb')
+validation_lmdb = os.path.join(str(Path.home()), 'workspace', 'ml-facenet-jetson/caffe_blvc/validation_lmdb')
 
 
 def transform_img(img, img_width=IMAGE_WIDTH, img_height=IMAGE_HEIGHT):
@@ -35,14 +42,12 @@ def make_datum(img, label):
         data=np.rollaxis(img, 2).tostring())
 
 
-train_lmdb = '/Users/pawan/workspace/ml-facenet-jetson/caffe_blvc/train_lmdb'
-validation_lmdb = '/Users/pawan/workspace/ml-facenet-jetson/caffe_blvc/validation_lmdb'
-
 os.system('rm -rf  ' + train_lmdb)
 os.system('rm -rf  ' + validation_lmdb)
 
-train_data = [img for img in glob.glob("/Users/pawan/workspace/ml-facenet-jetson/src/lfw_aligned/*/*png")]
-test_data = [img for img in glob.glob("../input/test1/*jpg")]
+train_data = [img for img in
+              glob.glob(os.path.join(str(Path.home()), 'workspace', 'ml-facenet-jetson/src/lfw_aligned/*/*png'))]
+# test_data = [img for img in glob.glob("../input/test1/*jpg")]
 
 # Shuffle train_data
 random.shuffle(train_data)
@@ -67,22 +72,22 @@ with in_db.begin(write=True) as in_txn:
 
 in_db.close()
 
-print('Creating validation_lmdb')
-
-in_db = lmdb.open(validation_lmdb, map_size=int(1e12))
-with in_db.begin(write=True) as in_txn:
-    for in_idx, img_path in enumerate(train_data):
-        if in_idx % 3 != 0:
-            continue
-        img = cv2.imread(img_path, cv2.IMREAD_COLOR)
-        img = transform_img(img, img_width=IMAGE_WIDTH, img_height=IMAGE_HEIGHT)
-        if 'cat' in img_path:
-            label = 0
-        else:
-            label = 1
-        datum = make_datum(img, label)
-        in_txn.put('{:0>5d}'.format(in_idx), datum.SerializeToString())
-        print('{:0>5d}'.format(in_idx) + ':' + img_path)
-in_db.close()
-
-print('Finished processing all images')
+# print('Creating validation_lmdb')
+#
+# in_db = lmdb.open(validation_lmdb, map_size=int(1e12))
+# with in_db.begin(write=True) as in_txn:
+#     for in_idx, img_path in enumerate(train_data):
+#         if in_idx % 3 != 0:
+#             continue
+#         img = cv2.imread(img_path, cv2.IMREAD_COLOR)
+#         img = transform_img(img, img_width=IMAGE_WIDTH, img_height=IMAGE_HEIGHT)
+#         if 'cat' in img_path:
+#             label = 0
+#         else:
+#             label = 1
+#         datum = make_datum(img, label)
+#         in_txn.put('{:0>5d}'.format(in_idx), datum.SerializeToString())
+#         print('{:0>5d}'.format(in_idx) + ':' + img_path)
+# in_db.close()
+#
+# print('Finished processing all images')
