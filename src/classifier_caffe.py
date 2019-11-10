@@ -22,23 +22,25 @@ HoME = str(Path.home())
 class Model:
     def __init__(self, embedding_size=512,
                  model_path=os.path.join(HoME, 'workspace', 'ml-facenet-jetson', 'src', 'resnet_models')):
-        caffePrototxt = os.path.join(model_path, 'resnetInception-512.prototxt')
+        caffe_prototxt = os.path.join(model_path, 'resnetInception-512.prototxt')
         if embedding_size == 128:
-            caffePrototxt = os.path.join(model_path, 'resnetInception-128.prototxt')
-        caffemodel = os.path.join(model_path, 'inception_resnet_v1_conv1x1.caffemodel')
-        self.net = caffe.Net(caffePrototxt, caffemodel, caffe.TEST)
+            caffe_prototxt = os.path.join(model_path, 'resnetInception-128.prototxt')
+        caffe_model = os.path.join(model_path, 'inception_resnet_v1_conv1x1.caffemodel')
+        self.net = caffe.Net(caffe_prototxt, caffe_model, caffe.TEST)
 
-    def normL2Vector(self, bottleNeck):
+    @staticmethod
+    def norm_l2_vector(bottle_neck):
         sum = 0
-        for v in bottleNeck:
+        for v in bottle_neck:
             sum += np.power(v, 2)
         sqrt = np.max([np.sqrt(sum), 0.0000000001])
-        vector = np.zeros((bottleNeck.shape))
-        for (i, v) in enumerate(bottleNeck):
+        vector = np.zeros(bottle_neck.shape)
+        for (i, v) in enumerate(bottle_neck):
             vector[i] = v / sqrt
         return vector.astype(np.float32)
 
-    def prewhiten(self, x):
+    @staticmethod
+    def prewhiten(x):
         mean = np.mean(x)
         std = np.std(x)
         print(mean, std)
@@ -52,7 +54,7 @@ class Model:
         inputCaffe = prewhitened.transpose((0, 3, 1, 2))  # [1,3,160,160]
         self.net.blobs['data'].data[...] = inputCaffe
         self.net.forward()
-        vector = self.normL2Vector(self.net.blobs['flatten'].data.squeeze())
+        vector = self.norm_l2_vector(self.net.blobs['flatten'].data.squeeze())
         print('Embedding size %s' % str(len(vector)))
         return vector
 
@@ -100,7 +102,6 @@ def main_caffe(args):
         print('Saved classifier model to file "%s"' % classifier_filename_exp)
 
     elif args.mode == 'CLASSIFY':
-        # Classify images
         print('Testing classifier')
         with open(classifier_filename_exp, 'rb') as infile:
             (model, class_names) = pickle.load(infile)

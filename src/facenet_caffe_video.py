@@ -37,8 +37,8 @@ class CaffeClasifier:
         probability = 0.0
         for i in range(len(best_class_indices)):
             name, probability = self.class_names[best_class_indices[i]], best_class_probabilities[i]
-            # print('%4d  %s: %.3f' % (i, self.class_names[best_class_indices[i]], best_class_probabilities[i]))
-        return name, probability
+            print('%4d  %s: %.3f' % (i, self.class_names[best_class_indices[i]], best_class_probabilities[i]))
+        # return name, probability
 
 
 class FacenetCaffe:
@@ -46,20 +46,20 @@ class FacenetCaffe:
                  caffe_weights=os.path.join(HOME, 'src/resnet_models/resnetInception-512.prototxt')):
         self.net = caffe.Net(caffe_weights, caffe_model, caffe.TEST)
 
-    def normL2Vector(self, bottleNeck):
+    def norm_l2_Vector(self, bottle_neck):
         sum = 0
-        for v in bottleNeck:
+        for v in bottle_neck:
             sum += np.power(v, 2)
         sqrt = np.max([np.sqrt(sum), 0.0000000001])
-        vector = np.zeros((bottleNeck.shape))
-        for (i, v) in enumerate(bottleNeck):
+        vector = np.zeros(bottle_neck.shape)
+        for (i, v) in enumerate(bottle_neck):
             vector[i] = v / sqrt
         return vector.astype(np.float32)
 
     def get_vector(self, input):
         self.net.blobs['data'].data[...] = input
         self.net.forward()
-        vector = self.normL2Vector(self.net.blobs['flatten'].data.squeeze())
+        vector = self.norm_l2_Vector(self.net.blobs['flatten'].data.squeeze())
         return vector
 
 
@@ -112,7 +112,9 @@ def prewhiten(x):
     return y
 
 
-def get_embeddings(img, face_caffe, boxes, landmarks):
+def get_embeddings(img, face_caffe, boxes, landmarks, embedding_size=512):
+    vectors = np.zeros((len(boxes), embedding_size))
+    i = 0
     for bb, ll in zip(boxes, landmarks):
         x1, y1, x2, y2 = int(bb[0]), int(bb[1]), int(bb[2]), int(bb[3])
         cropped = img[y1:y2, x1:x2, :]
@@ -123,7 +125,9 @@ def get_embeddings(img, face_caffe, boxes, landmarks):
         vector = face_caffe.get_vector(input_caffe)
         toc = time.time()
         print('Time taken for getting the vector : %s' % str(toc - tic))
-        return vector
+        vectors[i] = vector
+        i += 1
+    return vectors
 
 
 def loop_and_detect(cam, mtcnn, minsize):
@@ -138,9 +142,8 @@ def loop_and_detect(cam, mtcnn, minsize):
             dets, landmarks = mtcnn.detect(img, minsize=minsize)
             # print('{} face(s) found'.format(len(dets)))
             show_faces(img, dets, landmarks)
-            emb = get_embeddings(img, face_caffe, dets, landmarks)
-            name, prob = classifier.predict([emb])
-            print('%s: %.3f' % (name, prob))
+            emb = get_embeddings(img, face_caffe, dets, landmarks, embedding_size=512)
+            classifier.predict(emb)
             # print('Caffe Vector = {}'.format())
             cv2.imshow(WINDOW_NAME, img)
         key = cv2.waitKey(1)
