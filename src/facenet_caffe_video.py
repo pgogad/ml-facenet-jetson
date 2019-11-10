@@ -6,6 +6,7 @@ import time
 import caffe
 import cv2
 import numpy as np
+from pathlib import Path
 
 from mtcnn_caffe import mtcnn_caffe
 from utils.camera import add_camera_args, Camera
@@ -15,7 +16,7 @@ WINDOW_NAME = 'CaffeMtcnnDemo'
 BBOX_COLOR = (0, 255, 0)  # green
 FACE_FEED_SIZE = 160
 
-HOME = '/home/pawan/workspace'
+HOME = os.path.join(str(Path.home()), 'workspace')
 
 
 class CaffeClasifier:
@@ -120,7 +121,7 @@ def loop_and_detect(cam, mtcnn, minsize):
             dets, landmarks = mtcnn.detect(img, minsize=minsize)
             print('{} face(s) found'.format(len(dets)))
             show_faces(img, dets, landmarks)
-            print('Caffe Vector = {}'.format(get_embeddings(img, face_caffe, dets, landmarks)))
+            # print('Caffe Vector = {}'.format(get_embeddings(img, face_caffe, dets, landmarks)))
             cv2.imshow(WINDOW_NAME, img)
         key = cv2.waitKey(1)
         if key == 27:  # ESC key: quit program
@@ -172,10 +173,10 @@ def test_mtcnn_caffe():
 if __name__ == '__main__':
     # test_mtcnn_caffe()
     args = parse_args()
-    if args.device == 'mac':
-        HOME = '/Users/pawan/workspace'
-    elif args.device == 'linux':
-        HOME = '/home/azureadmin/workspace'
-    else:
-        HOME = '/home/pawan/workspace'
+    # if args.device == 'mac':
+    #     HOME = '/Users/pawan/workspace'
+    # elif args.device == 'linux':
+    #     HOME = '/home/azureadmin/workspace'
+    # else:
+    #     HOME = '/home/pawan/workspace'
     main(args)

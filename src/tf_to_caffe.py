@@ -1,6 +1,6 @@
 import os
 
-import caffe2
+# import caffe2
 
 import facenet
 
@@ -357,7 +357,6 @@ def calcCaffeVector(img, model_dir, embedding_size=512, device='mac'):
         caffePrototxt = os.path.join(model_dir, 'resnetInception-128.prototxt')
 
     caffemodel = os.path.join(model_dir, 'inception_resnet_v1_conv1x1.caffemodel')
-    caffe2.python.predictor
     net = caffe.Net(caffePrototxt, caffemodel, caffe.TEST)
     net.blobs['data'].data[...] = inputCaffe
     tic()
@@ -430,9 +429,9 @@ def mtcnnDetect(img, device='mac'):
 
 
 ### Step 1: tensorflow to caffemodel
-# tf_model_dir = '~/workspace/ml-facenet-jetson/src/20180402-114759'
-# convertTf2Caffe('~/workspace/ml-facenet-jetson/src/resnet_models', embedding_size=EMBEDDING_SIZE,
-#                 model_dir=tf_model_dir)
+tf_model_dir = '/home/pawan/workspace/ml-facenet-jetson/src/20180402-114759'
+convertTf2Caffe('/home/pawan/workspace/ml-facenet-jetson/src/resnet_models', embedding_size=EMBEDDING_SIZE,
+                model_dir=tf_model_dir)
 
 ### Step 2: caffemodel to CoreML
 ### use parameter (image_input_names='data') ==> input CVPixelBufferRef in iOS
@@ -455,8 +454,8 @@ def mtcnnDetect(img, device='mac'):
 # calcTFVector(crop, tf_model_dir)
 #
 # ### Step 4: calculate embedding from caffe model
-imgPath = 'test.png'
-img = cv2.imread(imgPath)
-crop = mtcnnDetect(img)
-caffe_model_dir = '/home/azureadmin/workspace/ml-facenet-jetson/src/resnet_models'
-print(calcCaffeVector(crop, caffe_model_dir, EMBEDDING_SIZE, device='mac'))
+# imgPath = 'test.png'
+# img = cv2.imread(imgPath)
+# crop = mtcnnDetect(img)
+# caffe_model_dir = '/home/pawan/workspace/ml-facenet-jetson/src/resnet_models'
+# print(calcCaffeVector(crop, caffe_model_dir, EMBEDDING_SIZE, device='mac'))
