@@ -33,12 +33,8 @@ class CaffeClasifier:
         best_class_indices = np.argmax(predictions, axis=1)
         best_class_probabilities = predictions[np.arange(len(best_class_indices)), best_class_indices]
 
-        name = ''
-        probability = 0.0
         for i in range(len(best_class_indices)):
-            name, probability = self.class_names[best_class_indices[i]], best_class_probabilities[i]
             print('%4d  %s: %.3f' % (i, self.class_names[best_class_indices[i]], best_class_probabilities[i]))
-        # return name, probability
 
 
 class FacenetCaffe:
@@ -149,6 +145,7 @@ def loop_and_detect(cam, mtcnn, minsize):
         key = cv2.waitKey(1)
         if key == 27:  # ESC key: quit program
             del face_caffe
+            del classifier
             break
         elif key == ord('F') or key == ord('f'):  # Toggle fullscreen
             full_scrn = not full_scrn
@@ -177,17 +174,6 @@ def main(args):
     cv2.destroyAllWindows()
 
     del mtcnn
-
-
-def test_mtcnn_caffe():
-    caffe.set_mode_gpu()
-    caffe.set_device(0)
-    mtcnn = CaffeMtcnn()
-    img = cv2.imread(os.path.join(HOME, 'src/test.png'))
-    boundingboxes, points = mtcnn.detect(img)
-
-    for face in boundingboxes:
-        print(int(face[0]), int(face[1]), int(face[2]), int(face[3]))
 
 
 if __name__ == '__main__':
