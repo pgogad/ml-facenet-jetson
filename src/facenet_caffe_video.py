@@ -153,15 +153,12 @@ def loop_and_detect(cam, mtcnn, minsize):
 
 
 def main(args):
-    # args = parse_args()
-    cam = Camera(args)
-
     if args.device == 'mac':
         caffe.set_mode_cpu()
     else:
         caffe.set_mode_gpu()
         caffe.set_device(0)
-
+    cam = Camera(args)
     cam.open()
     if not cam.is_opened:
         sys.exit('Failed to open camera!')
