@@ -1,5 +1,6 @@
 import argparse
 import os
+import pickle
 import sys
 import time
 
@@ -16,18 +17,33 @@ WINDOW_NAME = 'CaffeMtcnnDemo'
 BBOX_COLOR = (0, 255, 0)  # green
 FACE_FEED_SIZE = 160
 
-HOME = os.path.join(str(Path.home()), 'workspace')
+HOME = os.path.join(str(Path.home()), 'workspace/ml-facenet-jetson')
 
 
 class CaffeClasifier:
-    def __init__(self, path=os.path.join(HOME, 'ml-facenet-jetson/src/resnet_models/classifier.pkl')):
+    def __init__(self, path=os.path.join(HOME, 'src', '20180402-114759', 'caffe_classifier.pkl')):
         self.classifier = ''
+        # Classify images
+        print('Loading classifier')
+        with open(path, 'rb') as infile:
+            (self.model, self.class_names) = pickle.load(infile)
+
+    def predict(self, embedding):
+        predictions = self.model.predict_proba(embedding)
+        best_class_indices = np.argmax(predictions, axis=1)
+        best_class_probabilities = predictions[np.arange(len(best_class_indices)), best_class_indices]
+
+        name = ''
+        probability = 0.0
+        for i in range(len(best_class_indices)):
+            name, probability = self.class_names[best_class_indices[i]], best_class_probabilities[i]
+            # print('%4d  %s: %.3f' % (i, self.class_names[best_class_indices[i]], best_class_probabilities[i]))
+        return name, probability
 
 
 class FacenetCaffe:
-    def __init__(self, caffe_model=os.path.join(HOME,
-                                                'ml-facenet-jetson/src/resnet_models/inception_resnet_v1_conv1x1.caffemodel'),
-                 caffe_weights=os.path.join(HOME, 'ml-facenet-jetson/src/resnet_models/resnetInception-512.prototxt')):
+    def __init__(self, caffe_model=os.path.join(HOME, 'src/resnet_models/inception_resnet_v1_conv1x1.caffemodel'),
+                 caffe_weights=os.path.join(HOME, 'src/resnet_models/resnetInception-512.prototxt')):
         self.net = caffe.Net(caffe_weights, caffe_model, caffe.TEST)
 
     def normL2Vector(self, bottleNeck):
@@ -48,7 +64,7 @@ class FacenetCaffe:
 
 
 class CaffeMtcnn:
-    def __init__(self, caffe_model_path=os.path.join(HOME, 'ml-facenet-jetson/src/mtcnn_caffe')):
+    def __init__(self, caffe_model_path=os.path.join(HOME, 'src/mtcnn_caffe')):
         self.threshold = [0.8, 0.8, 0.6]
         self.factor = 0.709
         self.PNet = caffe.Net(os.path.join(caffe_model_path, "det1.prototxt"),
@@ -113,15 +129,19 @@ def get_embeddings(img, face_caffe, boxes, landmarks):
 def loop_and_detect(cam, mtcnn, minsize):
     full_scrn = False
     face_caffe = FacenetCaffe()
+    classifier = CaffeClasifier()
     while True:
         if cv2.getWindowProperty(WINDOW_NAME, 0) < 0:
             break
         img = cam.read()
         if img is not None:
             dets, landmarks = mtcnn.detect(img, minsize=minsize)
-            print('{} face(s) found'.format(len(dets)))
+            # print('{} face(s) found'.format(len(dets)))
             show_faces(img, dets, landmarks)
-            # print('Caffe Vector = {}'.format(get_embeddings(img, face_caffe, dets, landmarks)))
+            emb = get_embeddings(img, face_caffe, dets, landmarks)
+            name, prob = classifier.predict([emb])
+            print('%s: %.3f' % (name, prob))
+            # print('Caffe Vector = {}'.format())
             cv2.imshow(WINDOW_NAME, img)
         key = cv2.waitKey(1)
         if key == 27:  # ESC key: quit program
@@ -163,7 +183,7 @@ def test_mtcnn_caffe():
     caffe.set_mode_gpu()
     caffe.set_device(0)
     mtcnn = CaffeMtcnn()
-    img = cv2.imread(os.path.join(HOME, 'ml-facenet-jetson/src/test.png'))
+    img = cv2.imread(os.path.join(HOME, 'src/test.png'))
     boundingboxes, points = mtcnn.detect(img)
 
     for face in boundingboxes:
@@ -171,12 +191,5 @@ def test_mtcnn_caffe():
 
 
 if __name__ == '__main__':
-    # test_mtcnn_caffe()
     args = parse_args()
-    # if args.device == 'mac':
-    #     HOME = '/Users/pawan/workspace'
-    # elif args.device == 'linux':
-    #     HOME = '/home/azureadmin/workspace'
-    # else:
-    #     HOME = '/home/pawan/workspace'
     main(args)

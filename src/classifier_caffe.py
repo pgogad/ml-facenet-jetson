@@ -1,125 +1,121 @@
-"""An example of how to use your own dataset to train a classifier that recognizes people.
-"""
-# MIT License
-# 
-# Copyright (c) 2016 David Sandberg
-# 
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-# 
-# The above copyright notice and this permission notice shall be included in all
-# copies or substantial portions of the Software.
-# 
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import tensorflow as tf
-import numpy as np
 import argparse
-import facenet
 import os
-import sys
-import math
 import pickle
+import sys
+from pathlib import Path
+
+import caffe
+import cv2
+import numpy as np
 from sklearn.svm import SVC
 
+import facenet
 
-def main(args):
-    with tf.Graph().as_default():
+FACE_FEED_SIZE = 160
+HoME = str(Path.home())
 
-        with tf.Session() as sess:
-            np.random.seed(seed=args.seed)
 
-            if args.use_split_dataset:
-                dataset_tmp = facenet.get_dataset(args.data_dir)
-                train_set, test_set = split_dataset(dataset_tmp, args.min_nrof_images_per_class,
-                                                    args.nrof_train_images_per_class)
-                if args.mode == 'TRAIN':
-                    dataset = train_set
-                elif args.mode == 'CLASSIFY':
-                    dataset = test_set
-            else:
-                dataset = facenet.get_dataset(args.data_dir)
+class Model:
+    def __init__(self, embedding_size=512,
+                 model_path=os.path.join(HoME, 'workspace', 'ml-facenet-jetson', 'src', 'resnet_models')):
+        caffePrototxt = os.path.join(model_path, 'resnetInception-512.prototxt')
+        if embedding_size == 128:
+            caffePrototxt = os.path.join(model_path, 'resnetInception-128.prototxt')
+        caffemodel = os.path.join(model_path, 'inception_resnet_v1_conv1x1.caffemodel')
+        self.net = caffe.Net(caffePrototxt, caffemodel, caffe.TEST)
 
-            # Check that there are at least one training image per class
-            for cls in dataset:
-                assert (len(cls.image_paths) > 0, 'There must be at least one image for each class in the dataset')
+    def normL2Vector(self, bottleNeck):
+        sum = 0
+        for v in bottleNeck:
+            sum += np.power(v, 2)
+        sqrt = np.max([np.sqrt(sum), 0.0000000001])
+        vector = np.zeros((bottleNeck.shape))
+        for (i, v) in enumerate(bottleNeck):
+            vector[i] = v / sqrt
+        return vector.astype(np.float32)
 
-            paths, labels = facenet.get_image_paths_and_labels(dataset)
+    def prewhiten(self, x):
+        mean = np.mean(x)
+        std = np.std(x)
+        print(mean, std)
+        std_adj = np.maximum(std, 1.0 / np.sqrt(x.size))
+        y = np.multiply(np.subtract(x, mean), 1 / std_adj)
+        return y
 
-            print('Number of classes: %d' % len(dataset))
-            print('Number of images: %d' % len(paths))
+    def get_embeddings(self, img_path):
+        img = cv2.imread(img_path)
+        prewhitened = self.prewhiten(img)[np.newaxis]
+        inputCaffe = prewhitened.transpose((0, 3, 1, 2))  # [1,3,160,160]
+        self.net.blobs['data'].data[...] = inputCaffe
+        self.net.forward()
+        vector = self.normL2Vector(self.net.blobs['flatten'].data.squeeze())
+        print('Embedding size %s' % str(len(vector)))
+        return vector
 
-            # Load the model
-            print('Loading feature extraction model')
-            facenet.load_model(args.model)
 
-            # Get input and output tensors
-            images_placeholder = tf.get_default_graph().get_tensor_by_name("input:0")
-            embeddings = tf.get_default_graph().get_tensor_by_name("embeddings:0")
-            phase_train_placeholder = tf.get_default_graph().get_tensor_by_name("phase_train:0")
-            embedding_size = embeddings.get_shape()[1]
-            print('Embedding size = %s' % str(embedding_size))
+def main_caffe(args):
+    model = Model()
+    if args.use_split_dataset:
+        dataset_tmp = facenet.get_dataset(args.data_dir)
+        train_set, test_set = split_dataset(dataset_tmp, args.min_nrof_images_per_class,
+                                            args.nrof_train_images_per_class)
 
-            # Run forward pass to calculate embeddings
-            print('Calculating features for images')
-            nrof_images = len(paths)
-            nrof_batches_per_epoch = int(math.ceil(1.0 * nrof_images / args.batch_size))
-            emb_array = np.zeros((nrof_images, embedding_size))
-            for i in range(nrof_batches_per_epoch):
-                start_index = i * args.batch_size
-                end_index = min((i + 1) * args.batch_size, nrof_images)
-                paths_batch = paths[start_index:end_index]
-                images = facenet.load_data(paths_batch, False, False, args.image_size)
-                feed_dict = {images_placeholder: images, phase_train_placeholder: False}
-                emb_array[start_index:end_index, :] = sess.run(embeddings, feed_dict=feed_dict)
+        if args.mode == 'TRAIN':
+            dataset = train_set
+        elif args.mode == 'CLASSIFY':
+            dataset = test_set
+    else:
+        dataset = facenet.get_dataset(args.data_dir)
 
-            classifier_filename_exp = os.path.expanduser(args.classifier_filename)
+    for cls in dataset:
+        assert (len(cls.image_paths) > 0, 'There must be at least one image for each class in the dataset')
 
-            if args.mode == 'TRAIN':
-                # Train classifier
-                print('Training classifier')
-                model = SVC(kernel='linear', probability=True)
-                model.fit(emb_array, labels)
+    paths, labels = facenet.get_image_paths_and_labels(dataset)
+    print('Number of classes: %d' % len(dataset))
+    print('Number of images: %d' % len(paths))
 
-                # Create a list of class names
-                class_names = [cls.name.replace('_', ' ') for cls in dataset]
+    nrof_images = len(paths)
+    emb_array = np.zeros((nrof_images, 512))
 
-                # Saving classifier model
-                with open(classifier_filename_exp, 'wb') as outfile:
-                    pickle.dump((model, class_names), outfile)
-                print('Saved classifier model to file "%s"' % classifier_filename_exp)
+    for i in range(len(paths)):
+        emb_array[i] = model.get_embeddings(paths[i])
 
-            elif args.mode == 'CLASSIFY':
-                # Classify images
-                print('Testing classifier')
-                with open(classifier_filename_exp, 'rb') as infile:
-                    (model, class_names) = pickle.load(infile)
+    classifier_filename_exp = os.path.expanduser(args.classifier_filename)
+    if args.mode == 'TRAIN':
+        # Train classifier
+        print('Training classifier')
+        model = SVC(kernel='linear', probability=True)
+        model.fit(emb_array, labels)
 
-                print('Loaded classifier model from file "%s"' % classifier_filename_exp)
+        # Create a list of class names
+        class_names = [cls.name.replace('_', ' ') for cls in dataset]
 
-                predictions = model.predict_proba(emb_array)
-                best_class_indices = np.argmax(predictions, axis=1)
-                best_class_probabilities = predictions[np.arange(len(best_class_indices)), best_class_indices]
+        # Saving classifier model
+        with open(classifier_filename_exp, 'wb') as outfile:
+            pickle.dump((model, class_names), outfile)
+        print('Saved classifier model to file "%s"' % classifier_filename_exp)
 
-                for i in range(len(best_class_indices)):
-                    print('%4d  %s: %.3f' % (i, class_names[best_class_indices[i]], best_class_probabilities[i]))
+    elif args.mode == 'CLASSIFY':
+        # Classify images
+        print('Testing classifier')
+        with open(classifier_filename_exp, 'rb') as infile:
+            (model, class_names) = pickle.load(infile)
 
-                accuracy = np.mean(np.equal(best_class_indices, labels))
-                print('Accuracy: %.3f' % accuracy)
+        print('Loaded classifier model from file "%s"' % classifier_filename_exp)
+
+        predictions = model.predict_proba(emb_array)
+        best_class_indices = np.argmax(predictions, axis=1)
+        best_class_probabilities = predictions[np.arange(len(best_class_indices)), best_class_indices]
+
+        for i in range(len(best_class_indices)):
+            print('%4d  %s: %.3f' % (i, class_names[best_class_indices[i]], best_class_probabilities[i]))
+
+        accuracy = np.mean(np.equal(best_class_indices, labels))
+        print('Accuracy: %.3f' % accuracy)
 
 
 def split_dataset(dataset, min_nrof_images_per_class, nrof_train_images_per_class):
@@ -138,7 +134,7 @@ def split_dataset(dataset, min_nrof_images_per_class, nrof_train_images_per_clas
 BASE_DIR = os.path.dirname(__file__)
 ALIGNED_PICS = os.path.join(BASE_DIR, 'lfw_aligned')
 facenet_model_checkpoint = os.path.join(BASE_DIR, '20180402-114759')
-classifier_model = os.path.join(BASE_DIR, '20180402-114759', 'my_classifier.pkl')
+classifier_model = os.path.join(BASE_DIR, '20180402-114759', 'caffe_classifier.pkl')
 
 
 def parse_arguments(argv):
@@ -173,9 +169,16 @@ def parse_arguments(argv):
     parser.add_argument('--nrof_train_images_per_class', type=int,
                         help='Use this number of images from each class for training and the rest for testing',
                         default=2)
+    parser.add_argument('--device', type=str, help='mac, linux or jetson')
 
     return parser.parse_args(argv)
 
 
 if __name__ == '__main__':
-    main(parse_arguments(sys.argv[1:]))
+    args = parse_arguments(sys.argv[1:])
+    if args.device == 'mac':
+        caffe.set_mode_cpu()
+    else:
+        caffe.set_mode_gpu()
+        caffe.set_device(0)
+    main_caffe(args)
