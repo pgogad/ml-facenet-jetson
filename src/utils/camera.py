@@ -40,7 +40,7 @@ def add_camera_args(parser):
     return parser
 
 
-def open_cam_laptop(width, height):
+def open_cam_laptop():
     return cv2.VideoCapture(0)
 
 
@@ -150,7 +150,7 @@ class Camera:
             )
             self.use_thread = True
         elif args.web_cam:
-            self.cap = open_cam_laptop(args.image_width, args.image_height)
+            self.cap = open_cam_laptop()
             self.use_thread = True
         else:  # by default, use the jetson onboard camera
             self.cap = open_cam_onboard(
