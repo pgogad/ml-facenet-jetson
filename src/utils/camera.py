@@ -32,11 +32,16 @@ def add_camera_args(parser):
                         action='store_true')
     parser.add_argument('--vid', dest='video_dev', help='device # of USB webcam (/dev/video?) [0]',
                         default=0, type=int)
+    parser.add_argument('--web_cam', help='Use the laptop cam', dest='web_cam', action='store_true')
     parser.add_argument('--width', dest='image_width', help='image width [640]',
                         default=640, type=int)
     parser.add_argument('--height', dest='image_height', help='image height [480]',
                         default=480, type=int)
     return parser
+
+
+def open_cam_laptop(width, height):
+    return cv2.VideoCapture(0)
 
 
 def open_cam_rtsp(uri, width, height, latency):
@@ -143,6 +148,9 @@ class Camera:
                 args.image_width,
                 args.image_height
             )
+            self.use_thread = True
+        elif args.web_cam:
+            self.cap = open_cam_laptop(args.image_width, args.image_height)
             self.use_thread = True
         else:  # by default, use the jetson onboard camera
             self.cap = open_cam_onboard(
