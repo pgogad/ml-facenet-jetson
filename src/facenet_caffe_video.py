@@ -29,6 +29,8 @@ class CaffeClasifier:
             (self.model, self.class_names) = pickle.load(infile)
 
     def predict(self, embedding):
+        if embedding is None:
+            return
         predictions = self.model.predict_proba(embedding)
         best_class_indices = np.argmax(predictions, axis=1)
         best_class_probabilities = predictions[np.arange(len(best_class_indices)), best_class_indices]
@@ -109,7 +111,10 @@ def prewhiten(x):
 
 
 def get_embeddings(img, face_caffe, boxes, landmarks, embedding_size=512):
+    if len(boxes) < 1:
+        return None
     vectors = np.zeros((len(boxes), embedding_size))
+
     i = 0
     for bb, ll in zip(boxes, landmarks):
         x1, y1, x2, y2 = int(bb[0]), int(bb[1]), int(bb[2]), int(bb[3])
