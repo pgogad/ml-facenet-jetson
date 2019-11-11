@@ -146,7 +146,7 @@ def parse_arguments(argv):
 
     parser.add_argument('--mode', type=str, choices=['TRAIN', 'CLASSIFY'],
                         help='Indicates if a new classifier should be trained or a classification ' +
-                             'model should be used for classification', default='CLASSIFY')
+                             'model should be used for classification', default='TRAIN')
     parser.add_argument('--data_dir', type=str,
                         help='Path to the data directory containing aligned LFW face patches.', default=ALIGNED_PICS)
     parser.add_argument('--model', type=str,
