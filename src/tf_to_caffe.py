@@ -433,4 +433,3 @@ classifier_model = os.path.join(HOME, 'workspace', 'ml-facenet-jetson', 'src', '
 ### Step 1: tensorflow to caffemodel
 tf_model_dir = os.path.join(HOME, 'workspace', 'ml-facenet-jetson', 'src', '20180402-114759')
 convertTf2Caffe(RESNET_DIR, embedding_size=EMBEDDING_SIZE, model_dir=tf_model_dir)
-
