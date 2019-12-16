@@ -1,11 +1,3 @@
-"""camera.py
-
-This code implements the Camera class, which encapsulates code to
-handle IP CAM, USB webcam or the Jetson onboard camera.  In
-addition, this Camera class is further extended to take a video
-file or an image file as input.
-"""
-
 import logging
 import threading
 
