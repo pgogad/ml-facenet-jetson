@@ -1,26 +1,3 @@
-"""Performs face alignment and stores face thumbnails in the output directory."""
-# MIT License
-# 
-# Copyright (c) 2016 David Sandberg
-# 
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-# 
-# The above copyright notice and this permission notice shall be included in all
-# copies or substantial portions of the Software.
-# 
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -30,6 +7,7 @@ import os
 import random
 import sys
 from time import sleep
+from pathlib import Path
 
 import numpy as np
 import tensorflow as tf
@@ -147,15 +125,22 @@ def main(args):
 
 BASE_PATH = os.path.dirname(__file__)
 print('Base name : %s' % BASE_PATH)
+HOME = str(Path.home())
+
+BASE_DIR = os.path.dirname(__file__)
+INPUT_DIR = os.path.join(HOME, 'workspace', 'ml-facenet-jetson', 'src', 'lfw')
+ALIGNED_PICS = os.path.join(HOME, 'workspace', 'ml-facenet-jetson', 'src', 'lfw_aligned')
+facenet_model_checkpoint = os.path.join(HOME, 'workspace', 'ml-facenet-jetson', 'src', '20180402-114759')
+classifier_model = os.path.join(HOME, 'workspace', 'ml-facenet-jetson', 'src', '20180402-114759', 'caffe_classifier.pkl')
 
 
 def parse_arguments(argv):
     parser = argparse.ArgumentParser()
 
     parser.add_argument('--input_dir', type=str, help='Directory with unaligned images.',
-                        default='~/workspace/ml-facenet-jetson/src/lfw')
+                        default=INPUT_DIR)
     parser.add_argument('--output_dir', type=str, help='Directory with aligned face thumbnails.',
-                        default='~/workspace/ml-facenet-jetson/src/lfw_aligned')
+                        default=ALIGNED_PICS)
     parser.add_argument('--image_size', type=int,
                         help='Image size (height, width) in pixels.', default=160)
     parser.add_argument('--margin', type=int,

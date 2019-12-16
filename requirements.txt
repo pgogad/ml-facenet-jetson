@@ -2,6 +2,7 @@ coremltools
 six
 tensorflow==1.7
 scipy==1.1.0
+numpy==1.16
 scikit-learn
 opencv-python
 h5py

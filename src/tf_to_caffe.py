@@ -1,7 +1,5 @@
 import os
 
-# import caffe2
-
 import facenet
 
 os.environ['GLOG_minloglevel'] = '2'
@@ -11,12 +9,9 @@ import numpy as np
 import cv2
 from caffe.proto import caffe_pb2
 
-import sys
-
-# sys.path.append("mtcnn_caffe")
 import mtcnn_caffe.mtcnn_caffe as mtcnn_caffe
-
 from time import time
+from pathlib import Path
 
 _tstart_stack = []
 
@@ -43,17 +38,17 @@ def load_model(model, input_map=None):  # load tf model from dir
     saver.restore(tf.get_default_session(), os.path.join(model_exp, ckpt_file))
 
 
-def Conv_BN_Scale_Relu(caffeLayerName, tfLayerName, sess, net):
+def Conv_BN_Scale_Relu(caffe_layer_name, tfLayerName, sess, net):
     var1 = sess.run(tf.get_default_graph().get_tensor_by_name(tfLayerName + '/weights:0'))
-    net.params[caffeLayerName][0].data[...] = var1.transpose((3, 2, 0, 1))
+    net.params[caffe_layer_name][0].data[...] = var1.transpose((3, 2, 0, 1))
     var1 = sess.run(tf.get_default_graph().get_tensor_by_name(tfLayerName + '/BatchNorm/moving_mean:0'))
-    net.params[caffeLayerName + '/BatchNorm'][0].data[...] = var1
+    net.params[caffe_layer_name + '/BatchNorm'][0].data[...] = var1
     var1 = sess.run(tf.get_default_graph().get_tensor_by_name(tfLayerName + '/BatchNorm/moving_variance:0'))
-    net.params[caffeLayerName + '/BatchNorm'][1].data[...] = var1 + 0.001
-    net.params[caffeLayerName + '/BatchNorm'][2].data[...] = 1
+    net.params[caffe_layer_name + '/BatchNorm'][1].data[...] = var1 + 0.001
+    net.params[caffe_layer_name + '/BatchNorm'][2].data[...] = 1
     var1 = sess.run(tf.get_default_graph().get_tensor_by_name(tfLayerName + '/BatchNorm/beta:0'))
-    net.params[caffeLayerName + '/Scale'][0].data[...] = 1
-    net.params[caffeLayerName + '/Scale'][1].data[...] = var1
+    net.params[caffe_layer_name + '/Scale'][0].data[...] = 1
+    net.params[caffe_layer_name + '/Scale'][1].data[...] = var1
     return net
 
 
@@ -428,34 +423,14 @@ def mtcnnDetect(img, device='mac'):
     return warped
 
 
-### Step 1: tensorflow to caffemodel
-tf_model_dir = '/home/pawan/workspace/ml-facenet-jetson/src/20180402-114759'
-convertTf2Caffe('/home/pawan/workspace/ml-facenet-jetson/src/resnet_models', embedding_size=EMBEDDING_SIZE,
-                model_dir=tf_model_dir)
+HOME = str(Path.home())
+RESNET_DIR = os.path.join(HOME, 'workspace', 'ml-facenet-jetson', 'src', 'resnet_models')
+ALIGNED_PICS = os.path.join(HOME, 'workspace', 'ml-facenet-jetson', 'src', 'lfw_aligned')
+facenet_model_checkpoint = os.path.join(HOME, 'workspace', 'ml-facenet-jetson', 'src', '20180402-114759')
+classifier_model = os.path.join(HOME, 'workspace', 'ml-facenet-jetson', 'src', '20180402-114759',
+                                'caffe_classifier.pkl')
 
-### Step 2: caffemodel to CoreML
-### use parameter (image_input_names='data') ==> input CVPixelBufferRef in iOS
-### (without image_input_names='data') ==> input MLMultiArray in iOS
-# if EMBEDDING_SIZE == 512:
-#     coreml_model = coremltools.converters.caffe.convert(('InceptionResnet_Model/inception_resnet_v1_conv1x1.caffemodel',
-#                                                          'InceptionResnet_Model/resnetInception-512.prototxt'),
-#                                                         is_bgr=False)
-#     coreml_model.save('InceptionResnet_Model/InceptionResnet.mlmodel')
-# else:
-#     coreml_model = coremltools.converters.caffe.convert(('InceptionResnet_Model/inception_resnet_v1_conv1x1.caffemodel',
-#                                                          'InceptionResnet_Model/resnetInception-128.prototxt'),
-#                                                         is_bgr=False)
-#     coreml_model.save('InceptionResnet_Model/InceptionResnet.mlmodel')
-#
-# ### Step 3: calculate embedding from tensorflow model
-# imgPath = '4550.jpg'
-# img = cv2.imread(imgPath)  # BGR
-# crop = mtcnnDetect(img)  # RGB
-# calcTFVector(crop, tf_model_dir)
-#
-# ### Step 4: calculate embedding from caffe model
-# imgPath = 'test.png'
-# img = cv2.imread(imgPath)
-# crop = mtcnnDetect(img)
-# caffe_model_dir = '/home/pawan/workspace/ml-facenet-jetson/src/resnet_models'
-# print(calcCaffeVector(crop, caffe_model_dir, EMBEDDING_SIZE, device='mac'))
+### Step 1: tensorflow to caffemodel
+tf_model_dir = os.path.join(HOME, 'workspace', 'ml-facenet-jetson', 'src', '20180402-114759')
+convertTf2Caffe(RESNET_DIR, embedding_size=EMBEDDING_SIZE, model_dir=tf_model_dir)
+

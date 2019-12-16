@@ -16,12 +16,12 @@ from sklearn.svm import SVC
 import facenet
 
 FACE_FEED_SIZE = 160
-HoME = str(Path.home())
+HOME = str(Path.home())
 
 
 class Model:
     def __init__(self, embedding_size=512,
-                 model_path=os.path.join(HoME, 'workspace', 'ml-facenet-jetson', 'src', 'resnet_models')):
+                 model_path=os.path.join(HOME, 'workspace', 'ml-facenet-jetson', 'src', 'resnet_models')):
         caffe_prototxt = os.path.join(model_path, 'resnetInception-512.prototxt')
         if embedding_size == 128:
             caffe_prototxt = os.path.join(model_path, 'resnetInception-128.prototxt')
@@ -133,9 +133,9 @@ def split_dataset(dataset, min_nrof_images_per_class, nrof_train_images_per_clas
 
 
 BASE_DIR = os.path.dirname(__file__)
-ALIGNED_PICS = os.path.join(BASE_DIR, 'lfw_aligned')
-facenet_model_checkpoint = os.path.join(BASE_DIR, '20180402-114759')
-classifier_model = os.path.join(BASE_DIR, '20180402-114759', 'caffe_classifier.pkl')
+ALIGNED_PICS = os.path.join(HOME, 'workspace', 'ml-facenet-jetson', 'src', 'lfw_aligned')
+facenet_model_checkpoint = os.path.join(HOME, 'workspace', 'ml-facenet-jetson', 'src', '20180402-114759')
+classifier_model = os.path.join(HOME, 'workspace', 'ml-facenet-jetson', 'src', '20180402-114759', 'caffe_classifier.pkl')
 
 
 def parse_arguments(argv):
