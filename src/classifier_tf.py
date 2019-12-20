@@ -116,8 +116,8 @@ def main_caffe(args):
     if args.mode == 'TRAIN':
         print('TRAINING is about to start')
         svmC = 1.0
-        x = tf.placeholder("float", shape=[None, num_features])
-        y = tf.placeholder("float", shape=[None, 1])
+        x = tf.compat.v1.placeholder("float", shape=[None, num_features])
+        y = tf.compat.v1.placeholder("float", shape=[None, 1])
         W = tf.Variable(tf.zeros([num_features, 1]))
         b = tf.Variable(tf.zeros([1]))
         y_raw = tf.matmul(x, W) + b
@@ -125,11 +125,12 @@ def main_caffe(args):
         regularization_loss = 0.5 * tf.reduce_sum(tf.square(W))
         hinge_loss = tf.reduce_sum(tf.maximum(tf.zeros([100, 1]), 1 - y * y_raw))
         svm_loss = regularization_loss + svmC * hinge_loss
-        train_step = tf.train.GradientDescentOptimizer(0.01).minimize(svm_loss)
+        train_step = tf.compat.v1.train.GradientDescentOptimizer(0.01).minimize(svm_loss)
 
         predicted_class = tf.sign(y_raw)
         correct_prediction = tf.equal(y, predicted_class)
         accuracy = tf.reduce_mean(tf.cast(correct_prediction, "float"))
+        print(accuracy)
 
     else:
         print('Classify coming soon')
