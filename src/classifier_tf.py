@@ -10,15 +10,15 @@ import tensorflow as tf
 import numpy as np
 from pathlib import Path
 
-tf.app.flags.DEFINE_string('train', None,
-                           'File containing the training data (labels & features).')
-tf.app.flags.DEFINE_integer('num_epochs', 1,
-                            'Number of training epochs.')
-tf.app.flags.DEFINE_float('svmC', 1,
-                          'The C parameter of the SVM cost function.')
-tf.app.flags.DEFINE_boolean('verbose', False, 'Produce verbose output.')
-tf.app.flags.DEFINE_boolean('plot', True, 'Plot the final decision boundary on the data.')
-FLAGS = tf.app.flags.FLAGS
+# tf.app.flags.DEFINE_string('train', None,
+#                            'File containing the training data (labels & features).')
+# tf.app.flags.DEFINE_integer('num_epochs', 1,
+#                             'Number of training epochs.')
+# tf.app.flags.DEFINE_float('svmC', 1,
+#                           'The C parameter of the SVM cost function.')
+# tf.app.flags.DEFINE_boolean('verbose', False, 'Produce verbose output.')
+# tf.app.flags.DEFINE_boolean('plot', True, 'Plot the final decision boundary on the data.')
+# FLAGS = tf.app.flags.FLAGS
 
 HOME = str(Path.home())
 BASE_DIR = os.path.dirname(__file__)
