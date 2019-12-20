@@ -19,7 +19,7 @@ from pathlib import Path
 # tf.app.flags.DEFINE_boolean('verbose', False, 'Produce verbose output.')
 # tf.app.flags.DEFINE_boolean('plot', True, 'Plot the final decision boundary on the data.')
 # FLAGS = tf.app.flags.FLAGS
-
+BATCH_SIZE = 100
 HOME = str(Path.home())
 BASE_DIR = os.path.dirname(__file__)
 ALIGNED_PICS = os.path.join(HOME, 'workspace', 'ml-facenet-jetson', 'src', 'lfw_aligned')
@@ -130,7 +130,16 @@ def main_caffe(args):
         predicted_class = tf.sign(y_raw)
         correct_prediction = tf.equal(y, predicted_class)
         accuracy = tf.reduce_mean(tf.cast(correct_prediction, "float"))
-        print(accuracy)
+
+        with tf.compat.v1.Session() as sess:
+            tf.initialize_all_variables().run()
+            for step in range(10 * train_size // 100):
+                offset = (step * BATCH_SIZE) % train_size
+                batch_data = emb_array[offset:(offset + BATCH_SIZE), :]
+                batch_labels = labels[offset:(offset + BATCH_SIZE)]
+                train_step.run(feed_dict={x: batch_data, y: batch_labels})
+                print(svm_loss.eval(feed_dict={x: batch_data, y: batch_labels}))
+            print(accuracy.eval(feed_dict={x: emb_array, y: labels}))
 
     else:
         print('Classify coming soon')
