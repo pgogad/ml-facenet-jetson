@@ -84,7 +84,7 @@ def parse_args():
 
 def show_faces(img, faces):
     for (x, y, w, h) in faces:
-        cv2.rectangle(img, (x, y), (x + w, y + h), BBOX_COLOR, 2, 8)
+        cv2.rectangle(img, (x, y), (x + w, y + h), BBOX_COLOR, 2)
         cv2.circle(img, (int(x + w / 2), int(y + h / 2)), int((max(w, h) / 2)), BBOX_COLOR, 2)
 
 
