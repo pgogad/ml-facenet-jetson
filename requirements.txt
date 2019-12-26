@@ -1,10 +1,10 @@
 coremltools
 six
-tensorflow==1.15
+tensorflow-gpu==1.12
 scipy==1.1.0
-numpy==1.16
+numpy>=1.16
 scikit-learn
-opencv-python
+#opencv-python
 h5py
 matplotlib
 Pillow
