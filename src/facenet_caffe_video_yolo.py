@@ -71,7 +71,7 @@ class CaffeYolo:
     def detect(self, img):
         tic = time.time()
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        faces = self.face_cascade.detectMultiScale(gray, 1.3, 5)
+        faces = self.face_cascade.detectMultiScale(gray, scaleFactor=1.3, minNeighbors=5, minSize=(40, 40))
         toc = time.time()
         print('Time taken for detection %s' % str(toc - tic))
         return faces
