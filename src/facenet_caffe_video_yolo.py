@@ -29,6 +29,7 @@ class CaffeClasifier:
     def predict(self, embedding):
         if embedding is None:
             return
+        ret_list = list()
         tic = time.time()
         predictions = self.model.predict_proba(embedding)
         best_class_indices = np.argmax(predictions, axis=1)
@@ -37,6 +38,8 @@ class CaffeClasifier:
         print('Time taken for classification %s' % str(toc - tic))
         for i in range(len(best_class_indices)):
             print('%4d  %s: %.3f' % (i, self.class_names[best_class_indices[i]], best_class_probabilities[i]))
+            ret_list.append((i, self.class_names[best_class_indices[i]], best_class_probabilities[i]))
+        return ret_list
 
 
 class FacenetCaffe:
@@ -84,10 +87,19 @@ def parse_args():
     return args
 
 
-def show_faces(img, faces):
+def show_faces(img, faces, name):
+    i = 0
     for (x, y, w, h) in faces:
+        (index, n, p) = name[i]
         cv2.rectangle(img, (x, y), (x + w, y + h), BBOX_COLOR, 2)
         cv2.circle(img, (int(x + w / 2), int(y + h / 2)), int((max(w, h) / 2)), BBOX_COLOR, 2)
+
+        if p < 0.5:
+            n = 'Unknown'
+        text = '%d %s' % (index, n)
+        cv2.putText(img, text=text, org=(x, y), fontFace=cv2.FONT_HERSHEY_SIMPLEX, color=(0, 0, 255), fontScale=1,
+                    thickness=2)
+        i += 1
 
 
 def prewhiten(x):
@@ -130,9 +142,10 @@ def loop_and_detect(cam, mtcnn, minsize):
         if img is not None:
             faces = mtcnn.detect(img)
             if len(faces) > 0:
-                show_faces(img, faces)
+                # show_faces(img, faces)
                 emb = get_embeddings(img, face_caffe, faces, embedding_size=512)
-                classifier.predict(emb)
+                names = classifier.predict(emb)
+                show_faces(img, faces, names)
             cv2.imshow(WINDOW_NAME, img)
         key = cv2.waitKey(1)
         if key == 27:  # ESC key: quit program
