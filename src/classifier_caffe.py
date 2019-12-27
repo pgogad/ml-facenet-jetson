@@ -61,6 +61,7 @@ class Model:
 
 def main_caffe(args):
     model = Model()
+    dataset = None
     if args.use_split_dataset:
         dataset_tmp = facenet.get_dataset(args.data_dir)
         train_set, test_set = split_dataset(dataset_tmp, args.min_nrof_images_per_class,
@@ -135,7 +136,8 @@ def split_dataset(dataset, min_nrof_images_per_class, nrof_train_images_per_clas
 BASE_DIR = os.path.dirname(__file__)
 ALIGNED_PICS = os.path.join(HOME, 'workspace', 'ml-facenet-jetson', 'src', 'lfw_aligned')
 facenet_model_checkpoint = os.path.join(HOME, 'workspace', 'ml-facenet-jetson', 'src', '20180402-114759')
-classifier_model = os.path.join(HOME, 'workspace', 'ml-facenet-jetson', 'src', '20180402-114759', 'caffe_classifier.pkl')
+classifier_model = os.path.join(HOME, 'workspace', 'ml-facenet-jetson', 'src', '20180402-114759',
+                                'caffe_classifier.pkl')
 
 
 def parse_arguments(argv):

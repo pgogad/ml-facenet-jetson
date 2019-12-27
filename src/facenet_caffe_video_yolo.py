@@ -29,10 +29,12 @@ class CaffeClasifier:
     def predict(self, embedding):
         if embedding is None:
             return
+        tic = time.time()
         predictions = self.model.predict_proba(embedding)
         best_class_indices = np.argmax(predictions, axis=1)
         best_class_probabilities = predictions[np.arange(len(best_class_indices)), best_class_indices]
-
+        toc = time.time()
+        print('Time taken for classification %s' % str(toc - tic))
         for i in range(len(best_class_indices)):
             print('%4d  %s: %.3f' % (i, self.class_names[best_class_indices[i]], best_class_probabilities[i]))
 

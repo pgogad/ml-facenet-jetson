@@ -10,15 +10,6 @@ import tensorflow as tf
 import numpy as np
 from pathlib import Path
 
-# tf.app.flags.DEFINE_string('train', None,
-#                            'File containing the training data (labels & features).')
-# tf.app.flags.DEFINE_integer('num_epochs', 1,
-#                             'Number of training epochs.')
-# tf.app.flags.DEFINE_float('svmC', 1,
-#                           'The C parameter of the SVM cost function.')
-# tf.app.flags.DEFINE_boolean('verbose', False, 'Produce verbose output.')
-# tf.app.flags.DEFINE_boolean('plot', True, 'Plot the final decision boundary on the data.')
-# FLAGS = tf.app.flags.FLAGS
 BATCH_SIZE = 100
 HOME = str(Path.home())
 BASE_DIR = os.path.dirname(__file__)
@@ -83,6 +74,7 @@ def split_dataset(dataset, min_nrof_images_per_class, nrof_train_images_per_clas
 
 def main_caffe(args):
     model = Model()
+    dataset = None
     if args.use_split_dataset:
         dataset_tmp = facenet.get_dataset(args.data_dir)
         train_set, test_set = split_dataset(dataset_tmp, args.min_nrof_images_per_class,
@@ -106,6 +98,7 @@ def main_caffe(args):
     emb_array = np.zeros((nrof_images, 512))
 
     Y = np.zeros([len(paths)], dtype=np.int32)
+    example_id = np.array(['%d' % i for i in range(len(Y))])
 
     for i in range(len(paths)):
         emb_array[i] = model.get_embeddings(paths[i])
@@ -115,31 +108,30 @@ def main_caffe(args):
 
     if args.mode == 'TRAIN':
         print('TRAINING is about to start')
-        svmC = 1.0
-        x = tf.compat.v1.placeholder("float", shape=[None, num_features])
-        y = tf.compat.v1.placeholder("float", shape=[None, 1])
-        W = tf.Variable(tf.zeros([num_features, 1]))
-        b = tf.Variable(tf.zeros([1]))
-        y_raw = tf.matmul(x, W) + b
+        Y = np.zeros([train_size], dtype=np.int32)
+        example_id = np.array(['%d' % i for i in range(len(Y))])
 
-        regularization_loss = 0.5 * tf.reduce_sum(tf.square(W))
-        hinge_loss = tf.reduce_sum(tf.maximum(tf.zeros([100, 1]), 1 - y * y_raw))
-        svm_loss = regularization_loss + svmC * hinge_loss
-        train_step = tf.compat.v1.train.GradientDescentOptimizer(0.01).minimize(svm_loss)
+        x_column_name = 'x'
+        example_id_column_name = 'example_id'
 
-        predicted_class = tf.sign(y_raw)
-        correct_prediction = tf.equal(y, predicted_class)
-        accuracy = tf.reduce_mean(tf.cast(correct_prediction, "float"))
+        train_input_fn = tf.estimator.inputs.numpy_input_fn(
+            x={x_column_name: emb_array, example_id_column_name: example_id},
+            y=Y, num_epochs=None, shuffle=True)
 
-        with tf.compat.v1.Session() as sess:
-            tf.initialize_all_variables().run()
-            for step in range(10 * train_size // 100):
-                offset = (step * BATCH_SIZE) % train_size
-                batch_data = emb_array[offset:(offset + BATCH_SIZE), :]
-                batch_labels = labels[offset:(offset + BATCH_SIZE)]
-                train_step.run(feed_dict={x: batch_data, y: batch_labels})
-                print(svm_loss.eval(feed_dict={x: batch_data, y: batch_labels}))
-            print(accuracy.eval(feed_dict={x: emb_array, y: labels}))
+        svm = tf.contrib.learn.SVM(example_id_column=example_id_column_name, feature_columns=(
+            tf.contrib.layers.real_valued_column(column_name=x_column_name, dimension=512),), l2_regularization=0.1)
+        svm.fit(input_fn=train_input_fn, steps=10)
+
+        class_names = [cls.name.replace('_', ' ') for cls in dataset]
+
+
+
+        predictions = svm.predict_proba(emb_array[4])
+        best_class_indices = np.argmax(predictions, axis=1)
+        best_class_probabilities = predictions[np.arange(len(best_class_indices)), best_class_indices]
+
+        for i in range(len(best_class_indices)):
+            print('%4d  %s: %.3f' % (i, class_names[best_class_indices[i]], best_class_probabilities[i]))
 
     else:
         print('Classify coming soon')
