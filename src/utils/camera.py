@@ -47,7 +47,7 @@ def open_cam_rtsp(uri, width, height, latency):
     return cv2.VideoCapture(gst_str, cv2.CAP_GSTREAMER)
 
 
-def open_cam_usb(dev, width, height):
+def open_cam_usb(dev, width, height, device):
     """Open a USB webcam.
 
     We want to set width and height here, otherwise we could just do:
@@ -56,7 +56,11 @@ def open_cam_usb(dev, width, height):
     gst_str = ('v4l2src device=/dev/video{} ! '
                'video/x-raw, width=(int){}, height=(int){} ! '
                'videoconvert ! appsink').format(dev, width, height)
-    return cv2.VideoCapture(gst_str, cv2.CAP_GSTREAMER)
+
+    if device != 'jetson':
+        return cv2.VideoCapture(dev)
+    else:
+        return cv2.VideoCapture(gst_str, cv2.CAP_GSTREAMER)
 
 
 def open_cam_onboard(width, height):
@@ -138,7 +142,8 @@ class Camera:
             self.cap = open_cam_usb(
                 args.video_dev,
                 args.image_width,
-                args.image_height
+                args.image_height,
+                args.device
             )
             self.use_thread = True
         elif args.web_cam:
